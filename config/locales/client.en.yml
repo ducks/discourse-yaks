@@ -1,0 +1,48 @@
+en:
+  js:
+    yaks:
+      title: "Yak Management"
+
+      wallet:
+        title: "Your Yak Wallet"
+        balance: "Current Balance"
+        lifetime_earned: "Lifetime Earned"
+        lifetime_spent: "Lifetime Spent"
+        purchase_yaks: "Purchase Yaks"
+        transaction_history: "Transaction History"
+
+      features:
+        title: "Available Features"
+        post_highlight:
+          name: "Post Highlighting"
+          description: "Add a colored border and background to your post"
+        post_pin:
+          name: "Pin Post"
+          description: "Pin your post to the top of a topic for 24 hours"
+        custom_flair:
+          name: "Custom User Flair"
+          description: "Display custom flair next to your username for 30 days"
+        post_boost:
+          name: "Post Boost"
+          description: "Boost your post in feeds and search for 72 hours"
+
+      transactions:
+        types:
+          earn: "Earned"
+          spend: "Spent"
+          purchase: "Purchased"
+          refund: "Refunded"
+          admin: "Admin Grant"
+
+      errors:
+        insufficient_balance: "Insufficient Yak balance"
+        feature_not_found: "Feature not found"
+        feature_disabled: "This feature is currently disabled"
+        invalid_post: "Invalid post"
+        already_applied: "This feature has already been applied to this post"
+
+      admin:
+        title: "Yak Management"
+        give_yaks: "Grant Yaks to User"
+        transactions: "Transaction History"
+        features: "Manage Features"

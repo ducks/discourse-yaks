@@ -1,0 +1,22 @@
+plugins:
+  yaks_enabled:
+    default: false
+    client: true
+  yaks_dollar_to_yak_rate:
+    default: 20
+    min: 1
+    max: 1000
+  yaks_earning_enabled:
+    default: true
+    client: true
+  yaks_min_likes_for_reward:
+    default: 5
+    min: 1
+    max: 100
+  yaks_max_reward_per_post:
+    default: 50
+    min: 1
+    max: 1000
+  yaks_show_balance_publicly:
+    default: false
+    client: true

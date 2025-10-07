@@ -1,0 +1,61 @@
+# Ruby
+*.gem
+*.rbc
+/.config
+/coverage/
+/InstalledFiles
+/pkg/
+/spec/reports/
+/spec/examples.txt
+/test/tmp/
+/test/version_tmp/
+/tmp/
+
+# Bundler
+.bundle
+vendor/bundle
+
+# Nix
+.gems/
+
+# RSpec
+.rspec_status
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Local development
+.env
+.env.local
+
+# Logs
+*.log
+
+# Database
+*.sqlite3
+
+# Node (if any JS build tools)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Test coverage
+/coverage/
+
+# Compiled assets
+public/
+
+# Mac
+.DS_Store
+
+# Linux
+.directory
+
+# Windows
+Thumbs.db
+desktop.ini
