@@ -20,3 +20,63 @@ plugins:
   yaks_show_balance_publicly:
     default: false
     client: true
+  yaks_package_1_amount:
+    default: 5
+    min: 1
+    client: true
+    description: "Package 1: Cost in dollars"
+  yaks_package_1_yaks:
+    default: 100
+    min: 1
+    client: true
+    description: "Package 1: Base Yaks received"
+  yaks_package_1_bonus:
+    default: 0
+    min: 0
+    client: true
+    description: "Package 1: Bonus Yaks"
+  yaks_package_2_amount:
+    default: 10
+    min: 1
+    client: true
+    description: "Package 2: Cost in dollars"
+  yaks_package_2_yaks:
+    default: 200
+    min: 1
+    client: true
+    description: "Package 2: Base Yaks received"
+  yaks_package_2_bonus:
+    default: 25
+    min: 0
+    client: true
+    description: "Package 2: Bonus Yaks"
+  yaks_package_3_amount:
+    default: 25
+    min: 1
+    client: true
+    description: "Package 3: Cost in dollars"
+  yaks_package_3_yaks:
+    default: 500
+    min: 1
+    client: true
+    description: "Package 3: Base Yaks received"
+  yaks_package_3_bonus:
+    default: 75
+    min: 0
+    client: true
+    description: "Package 3: Bonus Yaks"
+  yaks_package_4_amount:
+    default: 50
+    min: 1
+    client: true
+    description: "Package 4: Cost in dollars"
+  yaks_package_4_yaks:
+    default: 1000
+    min: 1
+    client: true
+    description: "Package 4: Base Yaks received"
+  yaks_package_4_bonus:
+    default: 200
+    min: 0
+    client: true
+    description: "Package 4: Bonus Yaks"
