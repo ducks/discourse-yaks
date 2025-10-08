@@ -3,6 +3,19 @@ en:
     yaks:
       title: "Yak Management"
 
+      user_menu:
+        balance: "%{count} Yaks"
+
+      post_action:
+        spend: "Spend Yaks"
+        spend_yaks: "Spend Yaks on this post"
+
+      modal:
+        title: "Spend Yaks on Post"
+        select_feature: "Select a Feature"
+        select_color: "Choose a Color"
+        apply: "Apply Feature"
+
       wallet:
         title: "Your Yak Wallet"
         balance: "Current Balance"
@@ -10,6 +23,10 @@ en:
         lifetime_spent: "Lifetime Spent"
         purchase_yaks: "Purchase Yaks"
         transaction_history: "Transaction History"
+
+      purchase:
+        buy_now: "Buy Now"
+        back_to_wallet: "Back to Wallet"
 
       features:
         title: "Available Features"
