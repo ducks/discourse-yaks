@@ -9,8 +9,12 @@ A virtual currency system for Discourse forums that allows users to earn and spe
 - **Transaction History**: Complete audit trail of all Yak transactions
 - **Multiple Transaction Types**: Purchase, earn, spend, refund, and admin grants
 
-### Available Features (Proof of Concept)
-1. **Post Highlighting** (25 Yaks) - Add a colored border and background to posts
+### Available Features
+
+**Currently Implemented:**
+1. **Post Highlighting** (25 Yaks) - Add a colored border and background to posts (gold, blue, red, green, purple)
+
+**Planned Features:**
 2. **Post Pinning** (50 Yaks) - Pin posts to the top of topics for 24 hours
 3. **Custom User Flair** (100 Yaks) - Display custom flair for 30 days
 4. **Post Boost** (30 Yaks) - Priority in feeds and search for 72 hours
@@ -69,20 +73,24 @@ Users can view their Yak balance at `/yaks` which shows:
 
 #### Spending Yaks
 1. Navigate to a post you want to enhance
-2. Click the "Spend Yaks" button (when feature is added to UI)
+2. Click the "Spend Yaks" button in the post actions menu
 3. Select a feature and customize options (e.g., highlight color)
 4. Confirm the purchase
+5. The feature is applied immediately and your balance is updated
 
-#### Earning Yaks (when enabled)
+#### Earning Yaks (Not Yet Implemented)
+Currently, users can only receive Yaks through:
+- Admin grants
+- Purchases (stubbed endpoint, awaiting Stripe integration)
+
+Planned automatic earning system:
 - Quality posts that receive likes will earn Yaks automatically
-- Base reward: 5 Yaks for reaching minimum likes threshold
-- Additional: 2 Yaks per like beyond the threshold
-- Maximum: Configurable per-post cap
+- Configurable thresholds and rewards via site settings
 
 #### Purchasing Yaks
-- Payment integration stubbed for now
-- POST to `/yaks/purchase` with amount
-- Future: Full Stripe integration
+- Visit `/yaks/purchase` to see available packages
+- Payment integration stubbed for now (awaiting Stripe)
+- Packages configurable via site settings
 
 ### For Admins
 
@@ -176,7 +184,11 @@ plugins/discourse-yaks/
 │   └── services/
 │       └── yak_feature_service.rb
 ├── assets/
-│   ├── javascripts/discourse/   # Frontend components (TODO)
+│   ├── javascripts/discourse/   # Frontend components (complete)
+│   │   ├── components/
+│   │   ├── initializers/
+│   │   ├── routes/
+│   │   └── templates/
 │   └── stylesheets/yaks.scss
 ├── spec/                        # Full test suite
 └── README.md
@@ -184,42 +196,53 @@ plugins/discourse-yaks/
 
 ## Current Status
 
-### ✅ Implemented
+### ✅ Implemented (Version 20251008)
+**Backend:**
 - Core wallet and transaction system
 - Database schema and migrations
 - All models with full test coverage
 - YakFeatureService for applying features
-- Basic controllers (user and admin)
+- Controllers (user and admin endpoints)
 - Site settings configuration
-- CSS styling for features
-- Post highlighting proof of concept
+
+**Frontend:**
+- Balance display in user menu
+- "Spend Yaks" button in post actions menu
+- Feature selection modal with color picker
+- Full wallet page (`/yaks`) with stats and transaction history
+- Purchase flow (`/yaks/purchase`) with configurable packages
+- Post highlighting with 5 color options (gold, blue, red, green, purple)
+- Modern Discourse API patterns (no deprecated code)
+
+**Features Working End-to-End:**
+- Post highlighting (purchase, apply, display)
 
 ### 🚧 Next Steps
-1. **Frontend Components**
-   - Ember.js balance display component
-   - Spend Yaks button on posts
-   - Full wallet page UI
-   - Feature purchase modals
+1. **Implement Remaining Features**
+   - Post pinning logic and display
+   - Post boost logic and display
+   - Custom user flair
+   - Expiration cleanup background job
 
-2. **Payment Integration**
-   - Replace stub with real Stripe integration
-   - Webhook handlers for payment confirmation
-   - Refund processing
-
-3. **Earning System**
+2. **Earning System**
    - Background job for quality post detection
    - Automatic Yak rewards based on likes
    - Milestone rewards
 
-4. **Feature Enhancements**
-   - Custom user flair implementation
-   - Post boost ranking algorithm
-   - Expiration cleanup background job
+3. **Authorization & Security**
+   - Guardian implementation
+   - Rate limiting on endpoints
+   - Security audit
+
+4. **Payment Integration**
+   - Replace stub with real Stripe integration
+   - Webhook handlers
+   - Refund processing
 
 5. **Testing**
    - Controller request specs
    - System specs for UI interactions
-   - Integration tests for full feature flows
+   - JavaScript component tests
 
 ## Security Considerations
 
@@ -256,6 +279,6 @@ GPL v2 (same as Discourse)
 
 ---
 
-**Version**: 0.1.0
-**Status**: Alpha - Core functionality implemented, frontend pending
+**Version**: 20251008
+**Status**: Alpha - Backend and frontend complete, post highlighting working end-to-end. Additional features (pin/boost/flair) and earning system in development.
 **Discourse Version**: Tested with Discourse 3.4+
