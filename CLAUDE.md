@@ -576,17 +576,22 @@ SiteSetting.yaks_dollar_to_yak_rate
 
 ## Future Enhancements
 
-### Frontend UI (High Priority)
-- Yak balance display in user menu
-- "Spend Yaks" button on posts
-- Feature purchase modal with options
-- Transaction history page
-- Wallet management page
+### Feature Implementation (High Priority) - CURRENT FOCUS
+- Implement post pinning (backend logic exists, need effects)
+- Implement post boost (backend logic exists, need effects)
+- Implement custom flair (backend logic exists, need user-level display)
+- Expiration cleanup background job
 
 ### Earning System (Medium Priority)
 - Background job to detect quality posts
 - Automatic Yak rewards based on likes
 - Milestone rewards (badges integration)
+- Daily login bonuses
+
+### Authorization & Security (Medium-High Priority)
+- Guardian implementation for permission checks
+- Rate limiting on spending endpoints
+- Security audit
 
 ### Payment Integration (Medium Priority)
 - Replace stub with Stripe integration
@@ -597,8 +602,9 @@ SiteSetting.yaks_dollar_to_yak_rate
 ### Advanced Features (Low Priority)
 - Topic highlighting
 - Custom avatar frames
-- Priority support badges
-- Marketplace for user-created features
+- Gifting and tipping
+- Leaderboards
+- Admin dashboard improvements
 
 ## Performance Considerations
 
@@ -628,14 +634,25 @@ Per project guidelines, always persist important decisions:
 
 ## Version History
 
-**0.1.0** (Current)
+**20251008** (Current)
 - Core wallet system implemented
 - Four default features defined
 - Service layer for applying features
-- Post highlighting fully functional
-- Modern Discourse API patterns
+- Post highlighting fully functional (gold/blue/red/green/purple)
+- Modern Discourse API patterns (no deprecated code)
 - Full test coverage on models and services
+- Complete frontend UI:
+  - Balance display in user menu
+  - "Spend Yaks" button in post actions
+  - Feature selection modal with color picker
+  - Full wallet page with stats and transaction history
+  - Purchase flow with configurable packages
 - Frontend decorators working
 - Admin endpoints (basic)
 
-**Next**: Frontend UI, earning system, payment integration
+**20251007**
+- Initial backend implementation
+- Database schema and migrations
+- Models and services with tests
+
+**Next**: Implement remaining features (pin/boost/flair), earning system, expiration cleanup
