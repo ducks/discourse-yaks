@@ -29,6 +29,8 @@ after_initialize do
   require_relative "app/services/yak_feature_service"
   require_relative "app/controllers/yaks_controller"
   require_relative "app/controllers/admin/yaks_controller"
+  require_relative "app/jobs/regular/expire_yak_feature"
+  require_relative "app/jobs/scheduled/cleanup_expired_yak_features"
 
   # Add yak_balance method to User model
   add_to_class(:user, :yak_balance) do
