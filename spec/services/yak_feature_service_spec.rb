@@ -102,6 +102,21 @@ RSpec.describe YakFeatureService do
 
       expect(result[:feature_use].expires_at).to be_nil
     end
+
+    it "schedules expiration job for time-limited features" do
+      freeze_time
+
+      expect_enqueued_with(
+        job: :expire_yak_feature,
+        at: 24.hours.from_now,
+      ) { YakFeatureService.apply_feature(user, "post_pin", related_post: post) }
+    end
+
+    it "does not schedule expiration job for permanent features" do
+      expect_not_enqueued_with(job: :expire_yak_feature) do
+        YakFeatureService.apply_feature(user, "post_highlight", related_post: post)
+      end
+    end
   end
 
   describe ".can_apply_to_post?" do

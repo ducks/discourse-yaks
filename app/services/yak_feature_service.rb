@@ -51,6 +51,11 @@ class YakFeatureService
 
     apply_feature_effects(feature_key, related_post, feature_data) if related_post
 
+    # Schedule expiration job if feature has expiration time
+    if expires_at
+      Jobs.enqueue_at(expires_at, :expire_yak_feature, feature_use_id: feature_use.id)
+    end
+
     { success: true, feature_use: feature_use, transaction: transaction, new_balance: user.yak_balance }
   end
 
