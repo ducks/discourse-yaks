@@ -31,19 +31,37 @@
 - [x] CSS styling with colored borders
 - [x] Real-time application after purchase
 
+### Topic Pinning Feature (Fully Working - 20251012)
+- [x] Database migration for topic_pin feature
+- [x] Refactored YakFeatureService to support both posts and topics (keyword args)
+- [x] Added `can_apply_to_topic?` validation
+- [x] Topic-level pinning logic (uses Discourse's native `update_pinned`)
+- [x] Frontend: yak-topic-actions.js initializer
+- [x] Frontend: Modular modal showing appropriate features based on context
+- [x] 24-hour expiration handling with background jobs
+- [x] Icon registration (gift, dollar-sign, shopping-cart, etc.)
+- [x] Reactive balance updates in user menu
+- [x] Translation strings for all new features
+
+### Feature Expiration System (Fully Working - 20251011)
+- [x] ExpireYakFeature background job
+- [x] Scheduled job execution with `Jobs.enqueue_at`
+- [x] `YakFeatureService.remove_feature_effects` for cleanup
+- [x] Automatic unpinning of topics after 24 hours
+- [x] Test coverage for expiration logic
+
 ---
 
 ## 🚧 In Progress
 
 ### Phase 3: Implement Remaining Features
 
-**Priority: High** - These are defined and available in the modal but don't
-actually do anything yet beyond highlighting.
+**Priority: High** - These are defined but not yet implemented.
 
-#### Post Pinning
+#### Post Pinning (within topics)
 - [ ] Implement pin logic in YakFeatureService.apply_feature_effects
 - [ ] Add CSS styling for pinned posts
-- [ ] Topic-level pinning logic (show at top)
+- [ ] Post-level pinning logic (show at top of topic)
 - [ ] 24-hour expiration handling
 - [ ] Test pinning behavior
 
@@ -107,14 +125,14 @@ purchases. Need automatic earning for organic engagement.
 
 **Priority: Medium** - Features with durations need automatic cleanup.
 
-- [ ] Background job to expire features
-  - [ ] Query YakFeatureUse.expired
-  - [ ] Call YakFeatureService.remove_feature_effects
-  - [ ] Update or soft-delete YakFeatureUse records
-  - [ ] Run daily or hourly
-- [ ] Test expiration for pinned posts (24h)
-- [ ] Test expiration for boosted posts (72h)
-- [ ] Test expiration for custom flair (30 days)
+- [x] Background job to expire features (ExpireYakFeature - 20251011)
+  - [x] Query YakFeatureUse.expired
+  - [x] Call YakFeatureService.remove_feature_effects
+  - [x] Job scheduled at expiration time via Jobs.enqueue_at
+- [x] Test expiration for topic pins (24h)
+- [ ] Test expiration for pinned posts (24h) - once implemented
+- [ ] Test expiration for boosted posts (72h) - once implemented
+- [ ] Test expiration for custom flair (30 days) - once implemented
 - [ ] Notifications before expiration? (optional)
 
 ---
@@ -233,19 +251,26 @@ purchases. Need automatic earning for organic engagement.
 
 ---
 
-## Current Focus (2025-10-11)
+## Current Focus (2025-10-12)
+
+**Recently Completed:**
+- ✅ Topic pinning feature (100 Yaks, 24h duration)
+- ✅ Feature expiration system with background jobs
+- ✅ Modular service architecture (posts + topics)
+- ✅ Reactive balance display in user menu
 
 **Immediate Next Steps:**
-1. Implement post pinning effect (show pinned posts at top of topic)
+1. Implement post pinning effect (pin to top of topic, not category)
 2. Implement post boost effect (visual indicator + ranking if applicable)
 3. Implement custom flair (user-level feature)
-4. Write blog post Part 2 about implementing these features
+4. Write blog post Part 2 about implementing topic pinning
 
 **Blockers:** None
 
 **Notes:**
-- Backend and frontend infrastructure is solid
+- Backend and frontend infrastructure is solid and proven
+- Service layer is truly modular with keyword arguments
+- Expiration system working with real scheduled jobs
 - All the hard patterns are established
-- Now it's about adding feature effects and polishing
-- Earning system and expiration cleanup are important but not blocking users
-  from trying the system
+- Now it's about adding more feature effects and polishing
+- Earning system is important but not blocking users from trying the system

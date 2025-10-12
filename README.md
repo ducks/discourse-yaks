@@ -13,11 +13,12 @@ A virtual currency system for Discourse forums that allows users to earn and spe
 
 **Currently Implemented:**
 1. **Post Highlighting** (25 Yaks) - Add a colored border and background to posts (gold, blue, red, green, purple)
+2. **Topic Pinning** (100 Yaks) - Pin topics to the top of their category for 24 hours
 
 **Planned Features:**
-2. **Post Pinning** (50 Yaks) - Pin posts to the top of topics for 24 hours
-3. **Custom User Flair** (100 Yaks) - Display custom flair for 30 days
-4. **Post Boost** (30 Yaks) - Priority in feeds and search for 72 hours
+3. **Post Pinning** (50 Yaks) - Pin posts to the top of topics for 24 hours
+4. **Custom User Flair** (100 Yaks) - Display custom flair for 30 days
+5. **Post Boost** (30 Yaks) - Priority in feeds and search for 72 hours
 
 ### Admin Tools
 - System-wide statistics dashboard
@@ -72,11 +73,13 @@ Users can view their Yak balance at `/yaks` which shows:
 - Available features to purchase
 
 #### Spending Yaks
-1. Navigate to a post you want to enhance
-2. Click the "Spend Yaks" button in the post actions menu
+1. Navigate to a post or topic you want to enhance
+2. Click the "Spend Yaks" button (in post actions menu or topic footer)
 3. Select a feature and customize options (e.g., highlight color)
 4. Confirm the purchase
 5. The feature is applied immediately and your balance is updated
+
+Note: Topic pins appear at the top of their category, not the global Latest feed.
 
 #### Earning Yaks (Not Yet Implemented)
 Currently, users can only receive Yaks through:
@@ -196,33 +199,36 @@ plugins/discourse-yaks/
 
 ## Current Status
 
-### ✅ Implemented (Version 20251008)
+### ✅ Implemented (Version 20251012)
 **Backend:**
 - Core wallet and transaction system
 - Database schema and migrations
 - All models with full test coverage
-- YakFeatureService for applying features
+- YakFeatureService with modular post/topic support
 - Controllers (user and admin endpoints)
 - Site settings configuration
+- Feature expiration system with background jobs
 
 **Frontend:**
-- Balance display in user menu
-- "Spend Yaks" button in post actions menu
-- Feature selection modal with color picker
+- Balance display in user menu (reactive updates)
+- "Spend Yaks" button in post actions menu and topic footer
+- Modular feature selection modal (shows context-appropriate features)
 - Full wallet page (`/yaks`) with stats and transaction history
 - Purchase flow (`/yaks/purchase`) with configurable packages
 - Post highlighting with 5 color options (gold, blue, red, green, purple)
+- Topic pinning UI integrated with topic footer
 - Modern Discourse API patterns (no deprecated code)
 
 **Features Working End-to-End:**
-- Post highlighting (purchase, apply, display)
+- Post highlighting (purchase, apply, display, expiration)
+- Topic pinning (purchase, apply, automatic unpinning after 24h)
 
 ### 🚧 Next Steps
 1. **Implement Remaining Features**
-   - Post pinning logic and display
+   - Post pinning logic and display (pin to top of topic)
    - Post boost logic and display
    - Custom user flair
-   - Expiration cleanup background job
+   - Topic highlighting/theming
 
 2. **Earning System**
    - Background job for quality post detection
@@ -279,6 +285,6 @@ GPL v2 (same as Discourse)
 
 ---
 
-**Version**: 20251008
-**Status**: Alpha - Backend and frontend complete, post highlighting working end-to-end. Additional features (pin/boost/flair) and earning system in development.
+**Version**: 20251012
+**Status**: Alpha - Backend and frontend complete. Post highlighting and topic pinning working end-to-end with expiration system. Additional features (post pin/boost/flair) and earning system in development.
 **Discourse Version**: Tested with Discourse 3.4+
