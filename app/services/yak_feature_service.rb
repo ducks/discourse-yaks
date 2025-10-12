@@ -11,14 +11,22 @@ class YakFeatureService
   # @param related_post [Post, nil] The post to apply the feature to (if applicable)
   # @param feature_data [Hash] Additional data for the feature (colors, text, etc.)
   # @returns [Hash] Result with success status and data or error message
-  def self.apply_feature(user, feature_key, related_post: nil, feature_data: {})
+  def self.apply_feature(user, feature_key, related_post: nil, related_topic: nil, feature_data: {})
     feature = YakFeature.enabled.find_by(feature_key: feature_key)
     return { success: false, error: I18n.t("yaks.errors.feature_not_found") } unless feature
 
     return { success: false, error: I18n.t("yaks.errors.insufficient_balance") } unless feature
              .affordable_by?(user)
 
+    # Derive topic from post if not provided
+    topic = related_topic || related_post&.topic
+
+    # Check if feature can be applied
     if related_post && !can_apply_to_post?(user, related_post, feature_key)
+      return { success: false, error: I18n.t("yaks.errors.already_applied") }
+    end
+
+    if related_topic && !can_apply_to_topic?(user, related_topic, feature_key)
       return { success: false, error: I18n.t("yaks.errors.already_applied") }
     end
 
@@ -30,7 +38,7 @@ class YakFeatureService
         feature_key,
         "Applied #{feature.feature_name}",
         related_post_id: related_post&.id,
-        related_topic_id: related_post&.topic_id,
+        related_topic_id: topic&.id,
         metadata: feature_data,
       )
 
@@ -44,12 +52,13 @@ class YakFeatureService
         yak_feature: feature,
         yak_transaction: transaction,
         related_post: related_post,
-        related_topic: related_post&.topic,
+        related_topic: topic,
         expires_at: expires_at,
         feature_data: feature_data,
       )
 
-    apply_feature_effects(feature_key, related_post, feature_data) if related_post
+    # Apply effects based on what was provided
+    apply_feature_effects(feature_key, related_post: related_post, related_topic: topic, feature_data: feature_data)
 
     # Schedule expiration job if feature has expiration time
     if expires_at
@@ -74,6 +83,21 @@ class YakFeatureService
     existing_uses.empty?
   end
 
+  # Checks if a feature can be applied to a topic.
+  #
+  # @param user [User] The user attempting to apply the feature
+  # @param topic [Topic] The topic to check
+  # @param feature_key [String] The feature being applied
+  # @returns [Boolean] True if the feature can be applied
+  def self.can_apply_to_topic?(user, topic, feature_key)
+    return false unless topic
+
+    existing_uses =
+      YakFeatureUse.active.for_topic(topic.id).by_feature(feature_key).where(user_id: user.id)
+
+    existing_uses.empty?
+  end
+
   # Calculates the expiration time for a feature based on its settings.
   #
   # @param feature [YakFeature] The feature to calculate expiration for
@@ -88,52 +112,77 @@ class YakFeatureService
     end
   end
 
-  # Applies visual and functional effects of a feature to a post.
+  # Applies visual and functional effects of a feature.
   #
   # @param feature_key [String] The feature being applied
-  # @param post [Post] The post to apply effects to
+  # @param related_post [Post, nil] The post to apply effects to
+  # @param related_topic [Topic, nil] The topic to apply effects to
   # @param feature_data [Hash] Additional feature configuration
   # @returns [void]
-  def self.apply_feature_effects(feature_key, post, feature_data)
-    current_features = post.custom_fields["yak_features"] || {}
+  def self.apply_feature_effects(feature_key, related_post: nil, related_topic: nil, feature_data: {})
+    # Handle post-specific features
+    if related_post
+      current_features = related_post.custom_fields["yak_features"] || {}
 
-    case feature_key
-    when "post_highlight"
-      current_features["highlight"] = {
-        enabled: true,
-        color: feature_data[:color] || "gold",
-        applied_at: Time.zone.now.to_i,
-      }
-    when "post_pin"
-      current_features["pinned"] = { enabled: true, applied_at: Time.zone.now.to_i }
-    when "post_boost"
-      current_features["boosted"] = { enabled: true, applied_at: Time.zone.now.to_i }
+      case feature_key
+      when "post_highlight"
+        current_features["highlight"] = {
+          enabled: true,
+          color: feature_data[:color] || "gold",
+          applied_at: Time.zone.now.to_i,
+        }
+      when "post_pin"
+        current_features["pinned"] = { enabled: true, applied_at: Time.zone.now.to_i }
+      when "post_boost"
+        current_features["boosted"] = { enabled: true, applied_at: Time.zone.now.to_i }
+      end
+
+      related_post.custom_fields["yak_features"] = current_features
+      related_post.save_custom_fields
     end
 
-    post.custom_fields["yak_features"] = current_features
-    post.save_custom_fields
+    # Handle topic-specific features
+    if related_topic
+      case feature_key
+      when "topic_pin"
+        related_topic.update_pinned(true, false, 24.hours.from_now.to_s)
+      end
+    end
   end
 
-  # Removes expired feature effects from a post.
+  # Removes expired feature effects.
   #
   # @param feature_use [YakFeatureUse] The expired feature use
   # @returns [void]
   def self.remove_feature_effects(feature_use)
-    return unless feature_use.related_post
+    feature_key = feature_use.yak_feature.feature_key
 
-    post = feature_use.related_post
-    current_features = post.custom_fields["yak_features"] || {}
+    # Handle post-specific feature removal
+    if feature_use.related_post
+      post = feature_use.related_post
+      current_features = post.custom_fields["yak_features"] || {}
 
-    case feature_use.yak_feature.feature_key
-    when "post_highlight"
-      current_features.delete("highlight")
-    when "post_pin"
-      current_features.delete("pinned")
-    when "post_boost"
-      current_features.delete("boosted")
+      case feature_key
+      when "post_highlight"
+        current_features.delete("highlight")
+      when "post_pin"
+        current_features.delete("pinned")
+      when "post_boost"
+        current_features.delete("boosted")
+      end
+
+      post.custom_fields["yak_features"] = current_features
+      post.save_custom_fields
     end
 
-    post.custom_fields["yak_features"] = current_features
-    post.save_custom_fields
+    # Handle topic-specific feature removal
+    if feature_use.related_topic
+      topic = feature_use.related_topic
+
+      case feature_key
+      when "topic_pin"
+        topic.update_pinned(false) if topic.pinned_at.present?
+      end
+    end
   end
 end

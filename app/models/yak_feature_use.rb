@@ -17,6 +17,7 @@ class YakFeatureUse < ActiveRecord::Base
   scope :active, -> { where("expires_at IS NULL OR expires_at > ?", Time.zone.now) }
   scope :expired, -> { where("expires_at IS NOT NULL AND expires_at <= ?", Time.zone.now) }
   scope :for_post, ->(post_id) { where(related_post_id: post_id) }
+  scope :for_topic, ->(topic_id) { where(related_topic_id: topic_id) }
   scope :for_user, ->(user_id) { where(user_id: user_id) }
   scope :by_feature, ->(feature_key) { joins(:yak_feature).where(yak_features: { feature_key: }) }
 

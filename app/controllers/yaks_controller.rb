@@ -50,16 +50,28 @@ class YaksController < ApplicationController
   def spend
     feature_key = params.require(:feature_key)
     post_id = params[:post_id]
-    feature_data = params[:feature_data] || {}
+    topic_id = params[:topic_id]
+    feature_data = params[:feature_data]
 
     post = Post.find_by(id: post_id) if post_id
+    topic = Topic.find_by(id: topic_id) if topic_id
+
+    # Convert feature_data to hash with symbol keys
+    feature_data_hash = if feature_data.respond_to?(:to_unsafe_h)
+      feature_data.to_unsafe_h.symbolize_keys
+    elsif feature_data.is_a?(Hash)
+      feature_data.symbolize_keys
+    else
+      {}
+    end
 
     result =
       YakFeatureService.apply_feature(
         current_user,
         feature_key,
         related_post: post,
-        feature_data: feature_data.to_unsafe_h.symbolize_keys,
+        related_topic: topic,
+        feature_data: feature_data_hash,
       )
 
     if result[:success]

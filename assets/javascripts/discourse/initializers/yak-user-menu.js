@@ -18,11 +18,13 @@ export default {
 
       // Add balance display to user menu profile tab
       api.addQuickAccessProfileItem({
-        icon: "coins",
+        icon: "dollar-sign",
         href: "/yaks",
-        content: i18n("yaks.user_menu.balance", {
-          count: currentUser.yak_balance || 0
-        }),
+        get content() {
+          return i18n("yaks.user_menu.balance", {
+            count: currentUser.yak_balance || 0
+          });
+        },
       });
     });
   },

@@ -32,6 +32,9 @@ en:
       post_boost:
         name: "Post Boost"
         description: "Boost your post in feeds and search for 72 hours"
+      topic_pin:
+        name: "Pin Topic"
+        description: "Pin your topic to the top of the category for 24 hours"
 
     transactions:
       types:
@@ -40,6 +43,20 @@ en:
         purchase: "Purchased"
         refund: "Refunded"
         admin: "Admin Grant"
+
+    post_action:
+      spend: "Spend Yaks"
+      spend_yaks: "Spend Yaks on this post"
+
+    topic_action:
+      spend: "Pin Topic"
+      spend_yaks: "Spend Yaks to pin this topic"
+
+    modal:
+      title: "Spend Yaks"
+      select_feature: "Select a Feature"
+      select_color: "Select Color"
+      apply: "Apply Feature"
 
     errors:
       insufficient_balance: "Insufficient Yak balance"
