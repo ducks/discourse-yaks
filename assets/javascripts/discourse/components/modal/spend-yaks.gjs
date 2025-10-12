@@ -17,7 +17,7 @@ export default class SpendYaksModal extends Component {
   @tracked selectedColor = "gold";
   @tracked processing = false;
 
-  features = [
+  postFeatures = [
     {
       id: "post_highlight",
       name: i18n("yaks.features.post_highlight.name"),
@@ -41,6 +41,16 @@ export default class SpendYaksModal extends Component {
     },
   ];
 
+  topicFeatures = [
+    {
+      id: "topic_pin",
+      name: i18n("yaks.features.topic_pin.name"),
+      description: i18n("yaks.features.topic_pin.description"),
+      cost: 100,
+      hasOptions: false,
+    },
+  ];
+
   colors = [
     { id: "gold", name: "Gold" },
     { id: "blue", name: "Blue" },
@@ -48,6 +58,18 @@ export default class SpendYaksModal extends Component {
     { id: "green", name: "Green" },
     { id: "purple", name: "Purple" },
   ];
+
+  get isPostContext() {
+    return !!this.args.model.post;
+  }
+
+  get isTopicContext() {
+    return !!this.args.model.topic;
+  }
+
+  get features() {
+    return this.isPostContext ? this.postFeatures : this.topicFeatures;
+  }
 
   get balance() {
     return this.currentUser.yak_balance || 0;
@@ -80,10 +102,16 @@ export default class SpendYaksModal extends Component {
 
     try {
       const data = {
-        post_id: this.args.model.post.id,
         feature_key: this.selectedFeature,
         feature_data: {},
       };
+
+      // Add the appropriate ID based on context
+      if (this.isPostContext) {
+        data.post_id = this.args.model.post.id;
+      } else if (this.isTopicContext) {
+        data.topic_id = this.args.model.topic.id;
+      }
 
       if (this.selectedFeature === "post_highlight") {
         data.feature_data.color = this.selectedColor;
@@ -167,11 +195,13 @@ export default class SpendYaksModal extends Component {
             </div>
           {{/if}}
 
-          {{#unless this.canAfford}}
-            <div class="insufficient-balance">
-              {{i18n "yaks.errors.insufficient_balance"}}
-            </div>
-          {{/unless}}
+          {{#if this.selectedFeature}}
+            {{#unless this.canAfford}}
+              <div class="insufficient-balance">
+                {{i18n "yaks.errors.insufficient_balance"}}
+              </div>
+            {{/unless}}
+          {{/if}}
         </div>
       </:body>
 

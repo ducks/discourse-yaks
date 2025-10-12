@@ -42,6 +42,9 @@ en:
         post_boost:
           name: "Post Boost"
           description: "Boost your post in feeds and search for 72 hours"
+        topic_pin:
+          name: "Pin Topic"
+          description: "Pin your topic to the top of the category for 24 hours"
 
       transactions:
         types:
@@ -56,7 +59,7 @@ en:
         feature_not_found: "Feature not found"
         feature_disabled: "This feature is currently disabled"
         invalid_post: "Invalid post"
-        already_applied: "This feature has already been applied to this post"
+        already_applied: "This feature has already been applied"
 
       admin:
         title: "Yak Management"

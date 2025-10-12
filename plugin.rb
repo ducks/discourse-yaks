@@ -12,6 +12,12 @@ register_asset "stylesheets/yaks.scss"
 
 add_admin_route "yaks.title", "discourse-yaks"
 
+register_svg_icon "gift"
+register_svg_icon "dollar-sign"
+register_svg_icon "shopping-cart"
+register_svg_icon "coins"
+register_svg_icon "thumbtack"
+
 after_initialize do
   module ::DiscourseYaks
     PLUGIN_NAME ||= "discourse-yaks"
@@ -76,5 +82,10 @@ after_initialize do
     if name == :yaks_enabled && new_value == true
       YakFeature.seed_default_features
     end
+  end
+
+  # Automatically create wallet for new users
+  DiscourseEvent.on(:user_created) do |user|
+    YakWallet.for_user(user)
   end
 end
