@@ -1,0 +1,160 @@
+<div class="admin-config-page">
+  <div class="admin-plugin-config-page">
+    <div class="d-page-header">
+      <div class="d-page-header__title-row">
+        <h1 class="d-page-header__title">Yak Management</h1>
+      </div>
+      <p class="d-page-header__description">
+        Manage your virtual currency system. Configure purchase packages and premium features.
+      </p>
+    </div>
+
+    <div class="admin-plugin-config-page__content">
+      <div class="admin-plugin-config-page__main-area -without-inner-sidebar">
+        <section class="admin-plugin-config-area">
+          <div class="admin-yaks-stats">
+            <h3>System Statistics</h3>
+            <div class="stats-grid">
+              <div class="stat-box">
+                <div class="stat-value">{{this.model.stats.total_wallets}}</div>
+                <div class="stat-label">Total Wallets</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-value">{{this.model.stats.total_yaks_in_circulation}}</div>
+                <div class="stat-label">Yaks in Circulation</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-value">{{this.model.stats.active_feature_uses}}</div>
+                <div class="stat-label">Active Features</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-yaks-packages">
+            <div class="admin-section-header">
+              <h3>Purchase Packages</h3>
+              <button
+                type="button"
+                class="btn btn-primary"
+                {{on "click" this.addPackage}}
+              >
+                Add Package
+              </button>
+            </div>
+            <table class="yak-packages-table">
+              <thead>
+                <tr>
+                  <th>Package Name</th>
+                  <th>Price (USD)</th>
+                  <th>Base Yaks</th>
+                  <th>Bonus Yaks</th>
+                  <th>Total Yaks</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{#each this.model.packages as |package|}}
+                  <tr>
+                    <td>
+                      <strong>{{package.name}}</strong>
+                      {{#if package.description}}
+                        <br><small>{{package.description}}</small>
+                      {{/if}}
+                    </td>
+                    <td>${{package.price_usd}}</td>
+                    <td>{{package.yaks}} Yaks</td>
+                    <td>
+                      {{#if package.bonus_yaks}}
+                        +{{package.bonus_yaks}} Yaks
+                      {{else}}
+                        <span style="color: var(--primary-medium);">No bonus</span>
+                      {{/if}}
+                    </td>
+                    <td><strong>{{package.total_yaks}} Yaks</strong></td>
+                    <td>
+                      {{#if package.enabled}}
+                        <span class="enabled-badge">✓ Enabled</span>
+                      {{else}}
+                        <span class="disabled-badge">✗ Disabled</span>
+                      {{/if}}
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        class="btn btn-small"
+                        {{on "click" (fn this.editPackage package)}}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-small btn-danger"
+                        {{on "click" (fn this.deletePackage package)}}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                {{/each}}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="admin-yaks-features">
+            <h3>Manage Features</h3>
+            <table class="yak-features-table">
+              <thead>
+                <tr>
+                  <th>Feature</th>
+                  <th>Category</th>
+                  <th>Cost</th>
+                  <th>Duration</th>
+                  <th>Enabled</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{#each this.model.features as |feature|}}
+                  <tr>
+                    <td>
+                      <strong>{{feature.feature_name}}</strong><br>
+                      <small>{{feature.description}}</small>
+                    </td>
+                    <td>{{feature.category}}</td>
+                    <td>{{feature.cost}} Yaks</td>
+                    <td>
+                      {{#if feature.settings.duration_hours}}
+                        {{feature.settings.duration_hours}}h
+                      {{else if feature.settings.duration_days}}
+                        {{feature.settings.duration_days}}d
+                      {{else}}
+                        Permanent
+                      {{/if}}
+                    </td>
+                    <td>
+                      {{#if feature.enabled}}
+                        <span class="enabled-badge">✓ Enabled</span>
+                      {{else}}
+                        <span class="disabled-badge">✗ Disabled</span>
+                      {{/if}}
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        class="btn btn-small"
+                        {{on "click" (fn this.editFeature feature)}}
+                      >
+                        Edit
+                      </button>
+                    </td>
+                  </tr>
+                {{/each}}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</div>
