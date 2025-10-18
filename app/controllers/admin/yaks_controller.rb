@@ -113,6 +113,29 @@ module Admin
       end
     end
 
+    # Lists all features.
+    #
+    # @returns [JSON] All features with settings
+    def features
+      features = YakFeature.order(:category, :cost)
+
+      render json: {
+               features:
+                 features.map do |f|
+                   {
+                     id: f.id,
+                     feature_key: f.feature_key,
+                     feature_name: f.feature_name,
+                     description: f.description,
+                     cost: f.cost,
+                     category: f.category,
+                     enabled: f.enabled,
+                     settings: f.settings || {},
+                   }
+                 end,
+             }
+    end
+
     # Updates an existing feature.
     #
     # @returns [JSON] The updated feature
@@ -131,6 +154,89 @@ module Admin
         render json: { success: false, errors: feature.errors.full_messages },
                status: :unprocessable_entity
       end
+    end
+
+    # Lists all packages.
+    #
+    # @returns [JSON] All packages ordered by position
+    def packages
+      packages = YakPackage.ordered
+
+      render json: {
+               packages:
+                 packages.map do |p|
+                   {
+                     id: p.id,
+                     name: p.name,
+                     description: p.description,
+                     price_usd: p.price_usd,
+                     price_cents: p.price_cents,
+                     yaks: p.yaks,
+                     bonus_yaks: p.bonus_yaks,
+                     total_yaks: p.total_yaks,
+                     enabled: p.enabled,
+                     position: p.position,
+                   }
+                 end,
+             }
+    end
+
+    # Creates a new package.
+    #
+    # @returns [JSON] The created package
+    def create_package
+      package =
+        YakPackage.create(
+          name: params.require(:name),
+          description: params[:description],
+          price_cents: (params.require(:price_usd).to_f * 100).to_i,
+          yaks: params.require(:yaks).to_i,
+          bonus_yaks: params.fetch(:bonus_yaks, 0).to_i,
+          enabled: params.fetch(:enabled, true),
+          position: YakPackage.maximum(:position).to_i + 1,
+        )
+
+      if package.persisted?
+        render json: { success: true, package: package }
+      else
+        render json: { success: false, errors: package.errors.full_messages },
+               status: :unprocessable_entity
+      end
+    end
+
+    # Updates an existing package.
+    #
+    # @returns [JSON] The updated package
+    def update_package
+      package = YakPackage.find(params.require(:id))
+
+      update_params = {}
+      update_params[:name] = params[:name] if params[:name]
+      update_params[:description] = params[:description] if params[:description]
+      update_params[:price_cents] = (params[:price_usd].to_f * 100).to_i if params[:price_usd]
+      update_params[:yaks] = params[:yaks].to_i if params[:yaks]
+      update_params[:bonus_yaks] = params[:bonus_yaks].to_i if params[:bonus_yaks]
+      update_params[:enabled] = params[:enabled] if !params[:enabled].nil?
+      update_params[:position] = params[:position].to_i if params[:position]
+
+      if package.update(update_params)
+        render json: { success: true, package: package }
+      else
+        render json: { success: false, errors: package.errors.full_messages },
+               status: :unprocessable_entity
+      end
+    end
+
+    # Deletes a package.
+    #
+    # @returns [JSON] Success status
+    def delete_package
+      package = YakPackage.find(params.require(:id))
+      package.destroy!
+
+      render json: { success: true }
+    rescue StandardError => e
+      render json: { success: false, error: e.message }, status: :unprocessable_entity
     end
   end
 end

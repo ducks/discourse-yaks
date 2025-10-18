@@ -32,7 +32,7 @@ export default class YaksWallet extends Component {
         <DButton
           @route="yaks.purchase"
           @label="yaks.wallet.purchase_yaks"
-          @icon="shopping-cart"
+          @icon="coins"
           class="btn-primary"
         />
       </div>

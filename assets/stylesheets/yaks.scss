@@ -307,7 +307,18 @@
   }
 }
 
-.admin-yaks {
+.admin-plugin-yaks {
+  .admin-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+
+    h3 {
+      margin: 0;
+    }
+  }
+
   .admin-yaks-stats {
     margin-bottom: 32px;
 
@@ -315,51 +326,129 @@
       margin-bottom: 16px;
     }
 
-    .stat-grid {
+    .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 16px;
 
-      .stat-item {
-        padding: 16px;
+      .stat-box {
+        padding: 20px;
         background: var(--primary-very-low);
-        border-radius: 6px;
+        border-radius: 8px;
+        text-align: center;
 
-        label {
-          display: block;
-          font-size: 0.9em;
-          color: var(--primary-medium);
+        .stat-value {
+          font-size: 2.5em;
+          font-weight: bold;
+          color: var(--primary);
           margin-bottom: 8px;
         }
 
-        span {
-          display: block;
-          font-size: 1.8em;
-          font-weight: bold;
-          color: var(--primary);
+        .stat-label {
+          font-size: 0.9em;
+          color: var(--primary-medium);
         }
       }
     }
   }
 
-  .admin-yaks-recent {
+  .admin-yaks-packages {
+    margin-bottom: 32px;
+
     h3 {
       margin-bottom: 16px;
     }
 
-    table {
+    .yak-packages-table {
       width: 100%;
+      border-collapse: collapse;
 
-      td.positive {
-        color: #32cd32;
-        font-weight: bold;
+      thead {
+        background: var(--primary-very-low);
+
+        th {
+          padding: 12px;
+          text-align: left;
+          font-weight: bold;
+        }
       }
 
-      td.negative {
-        color: #dc143c;
-        font-weight: bold;
+      tbody {
+        tr {
+          border-bottom: 1px solid var(--primary-low);
+
+          &:hover {
+            background: var(--primary-very-low);
+          }
+
+          td {
+            padding: 16px 12px;
+          }
+        }
       }
     }
+  }
+
+  .admin-yaks-features {
+    h3 {
+      margin-bottom: 16px;
+    }
+
+    .yak-features-table {
+      width: 100%;
+      border-collapse: collapse;
+
+      thead {
+        background: var(--primary-very-low);
+
+        th {
+          padding: 12px;
+          text-align: left;
+          font-weight: bold;
+        }
+      }
+
+      tbody {
+        tr {
+          border-bottom: 1px solid var(--primary-low);
+
+          &:hover {
+            background: var(--primary-very-low);
+          }
+
+          td {
+            padding: 16px 12px;
+
+            small {
+              color: var(--primary-medium);
+              display: block;
+              margin-top: 4px;
+            }
+          }
+        }
+      }
+
+      .enabled-badge {
+        color: #32cd32;
+        font-weight: 600;
+      }
+
+      .disabled-badge {
+        color: #dc143c;
+        font-weight: 600;
+      }
+    }
+  }
+}
+
+.edit-yak-package-modal {
+  .package-preview {
+    padding: 16px;
+    background: var(--primary-very-low);
+    border-radius: 6px;
+    margin: 16px 0;
+    text-align: center;
+    font-size: 1.1em;
   }
 }
 
