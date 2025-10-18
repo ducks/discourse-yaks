@@ -18,6 +18,16 @@ function initializeYakPostActions(api) {
       return;
     }
 
+    // Don't show if any yak feature is already active on this post
+    if (post.yak_features) {
+      return;
+    }
+
+    // Don't show on first post if topic has yak features
+    if (post.post_number === 1 && post.topic?.yak_features) {
+      return;
+    }
+
     dag.add("yak-spend", YakSpendButton, {
       before: firstButtonKey,
     });

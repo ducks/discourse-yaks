@@ -58,7 +58,7 @@ class YakFeatureService
       )
 
     # Apply effects based on what was provided
-    apply_feature_effects(feature_key, related_post: related_post, related_topic: topic, feature_data: feature_data)
+    apply_feature_effects(feature, related_post: related_post, related_topic: topic, feature_data: feature_data)
 
     # Schedule expiration job if feature has expiration time
     if expires_at
@@ -114,12 +114,14 @@ class YakFeatureService
 
   # Applies visual and functional effects of a feature.
   #
-  # @param feature_key [String] The feature being applied
+  # @param feature [YakFeature] The feature being applied
   # @param related_post [Post, nil] The post to apply effects to
   # @param related_topic [Topic, nil] The topic to apply effects to
   # @param feature_data [Hash] Additional feature configuration
   # @returns [void]
-  def self.apply_feature_effects(feature_key, related_post: nil, related_topic: nil, feature_data: {})
+  def self.apply_feature_effects(feature, related_post: nil, related_topic: nil, feature_data: {})
+    feature_key = feature.feature_key
+
     # Handle post-specific features
     if related_post
       current_features = related_post.custom_fields["yak_features"] || {}
@@ -145,7 +147,21 @@ class YakFeatureService
     if related_topic
       case feature_key
       when "topic_pin"
-        related_topic.update_pinned(true, false, 24.hours.from_now.to_s)
+        duration = feature.settings["duration_hours"]&.hours || 24.hours
+        related_topic.update_pinned(true, false, duration.from_now.to_s)
+      when "topic_boost"
+        duration = feature.settings["duration_hours"]&.hours || 72.hours
+        related_topic.update_pinned(true, true, duration.from_now.to_s)
+
+        # Add visual highlight for boosted topics
+        current_features = related_topic.custom_fields["yak_features"] || {}
+        current_features["boosted"] = {
+          enabled: true,
+          color: feature_data[:color] || "gold",
+          applied_at: Time.zone.now.to_i,
+        }
+        related_topic.custom_fields["yak_features"] = current_features
+        related_topic.save_custom_fields
       end
     end
   end
@@ -182,6 +198,14 @@ class YakFeatureService
       case feature_key
       when "topic_pin"
         topic.update_pinned(false) if topic.pinned_at.present?
+      when "topic_boost"
+        topic.update_pinned(false) if topic.pinned_at.present?
+
+        # Remove visual highlight
+        current_features = topic.custom_fields["yak_features"] || {}
+        current_features.delete("boosted")
+        topic.custom_fields["yak_features"] = current_features
+        topic.save_custom_fields
       end
     end
   end

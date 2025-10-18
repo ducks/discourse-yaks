@@ -1,3 +1,16 @@
+:root {
+  --yak-color-gold: #ffd700;
+  --yak-color-gold-bg: rgba(255, 215, 0, 0.1);
+  --yak-color-blue: #4169e1;
+  --yak-color-blue-bg: rgba(65, 105, 225, 0.1);
+  --yak-color-red: #dc143c;
+  --yak-color-red-bg: rgba(220, 20, 60, 0.1);
+  --yak-color-green: #32cd32;
+  --yak-color-green-bg: rgba(50, 205, 50, 0.1);
+  --yak-color-purple: #9370db;
+  --yak-color-purple-bg: rgba(147, 112, 219, 0.1);
+}
+
 .yak-highlighted-post {
   border: 3px solid;
   border-radius: 4px;
@@ -5,39 +18,39 @@
   margin: 8px 0;
 
   &[data-yak-color="gold"] {
-    border-color: #ffd700;
-    background: rgba(255, 215, 0, 0.1);
+    border-color: var(--yak-color-gold);
+    background: var(--yak-color-gold-bg);
   }
 
   &[data-yak-color="blue"] {
-    border-color: #4169e1;
-    background: rgba(65, 105, 225, 0.1);
+    border-color: var(--yak-color-blue);
+    background: var(--yak-color-blue-bg);
   }
 
   &[data-yak-color="red"] {
-    border-color: #dc143c;
-    background: rgba(220, 20, 60, 0.1);
+    border-color: var(--yak-color-red);
+    background: var(--yak-color-red-bg);
   }
 
   &[data-yak-color="green"] {
-    border-color: #32cd32;
-    background: rgba(50, 205, 50, 0.1);
+    border-color: var(--yak-color-green);
+    background: var(--yak-color-green-bg);
   }
 
   &[data-yak-color="purple"] {
-    border-color: #9370db;
-    background: rgba(147, 112, 219, 0.1);
+    border-color: var(--yak-color-purple);
+    background: var(--yak-color-purple-bg);
   }
 }
 
 .yak-pinned-post {
-  border-top: 3px solid #ffd700;
-  background: rgba(255, 215, 0, 0.05);
+  border-top: 3px solid var(--yak-color-gold);
+  background: var(--yak-color-gold-bg);
 
   .yak-pin-badge {
     display: inline-block;
     padding: 2px 8px;
-    background: #ffd700;
+    background: var(--yak-color-gold);
     color: #000;
     font-size: 0.85em;
     font-weight: bold;
@@ -47,18 +60,82 @@
 }
 
 .yak-boosted-post {
-  border-left: 5px solid #32cd32;
+  border-left: 5px solid var(--yak-color-green);
   padding-left: 12px;
 
   .yak-boost-badge {
     display: inline-block;
     padding: 2px 8px;
-    background: #32cd32;
+    background: var(--yak-color-green);
     color: #fff;
     font-size: 0.85em;
     font-weight: bold;
     border-radius: 3px;
     margin-left: 8px;
+  }
+}
+
+.yak-boosted-topic {
+  border: 3px solid;
+  border-radius: 6px;
+  padding: 8px;
+  margin: 4px 0;
+
+  &.yak-color-gold {
+    border-color: var(--yak-color-gold);
+    background: var(--yak-color-gold-bg);
+  }
+
+  &.yak-color-blue {
+    border-color: var(--yak-color-blue);
+    background: var(--yak-color-blue-bg);
+  }
+
+  &.yak-color-red {
+    border-color: var(--yak-color-red);
+    background: var(--yak-color-red-bg);
+  }
+
+  &.yak-color-green {
+    border-color: var(--yak-color-green);
+    background: var(--yak-color-green-bg);
+  }
+
+  &.yak-color-purple {
+    border-color: var(--yak-color-purple);
+    background: var(--yak-color-purple-bg);
+  }
+}
+
+.yak-boosted-topic-post {
+  border: 3px solid;
+  border-radius: 6px;
+  padding: 12px;
+  margin: 8px 0;
+
+  &.yak-color-gold {
+    border-color: var(--yak-color-gold);
+    background: var(--yak-color-gold-bg);
+  }
+
+  &.yak-color-blue {
+    border-color: var(--yak-color-blue);
+    background: var(--yak-color-blue-bg);
+  }
+
+  &.yak-color-red {
+    border-color: var(--yak-color-red);
+    background: var(--yak-color-red-bg);
+  }
+
+  &.yak-color-green {
+    border-color: var(--yak-color-green);
+    background: var(--yak-color-green-bg);
+  }
+
+  &.yak-color-purple {
+    border-color: var(--yak-color-purple);
+    background: var(--yak-color-purple-bg);
   }
 }
 

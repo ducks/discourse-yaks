@@ -49,6 +49,13 @@ export default class SpendYaksModal extends Component {
       cost: 100,
       hasOptions: false,
     },
+    {
+      id: "topic_boost",
+      name: i18n("yaks.features.topic_boost.name"),
+      description: i18n("yaks.features.topic_boost.description"),
+      cost: 150,
+      hasOptions: true,
+    },
   ];
 
   colors = [
@@ -113,7 +120,7 @@ export default class SpendYaksModal extends Component {
         data.topic_id = this.args.model.topic.id;
       }
 
-      if (this.selectedFeature === "post_highlight") {
+      if (this.selectedFeature === "post_highlight" || this.selectedFeature === "topic_boost") {
         data.feature_data.color = this.selectedColor;
       }
 
@@ -174,7 +181,7 @@ export default class SpendYaksModal extends Component {
             {{/each}}
           </div>
 
-          {{#if (eq this.selectedFeature "post_highlight")}}
+          {{#if (or (eq this.selectedFeature "post_highlight") (eq this.selectedFeature "topic_boost"))}}
             <div class="color-picker">
               <h3>{{i18n "yaks.modal.select_color"}}</h3>
               <div class="color-options">
