@@ -47,7 +47,7 @@ function initializeYakTopicActions(api) {
       return this.site.mobileView;
     },
     classNames: ["yak-spend-topic"],
-    dependentKeys: ["topic.user_id", "topic.closed"],
+    dependentKeys: ["topic.user_id", "topic.closed", "topic.yak_features"],
     displayed() {
       const topic = this.topic;
 
@@ -58,6 +58,11 @@ function initializeYakTopicActions(api) {
 
       // Don't show on closed topics
       if (topic.closed) {
+        return false;
+      }
+
+      // Don't show if any yak feature is already active on this topic
+      if (topic.yak_features) {
         return false;
       }
 

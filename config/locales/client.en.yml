@@ -45,6 +45,9 @@ en:
         topic_pin:
           name: "Pin Topic"
           description: "Pin your topic to the top of the category for 24 hours"
+        topic_boost:
+          name: "Boost Topic"
+          description: "Pin your topic globally with visual highlighting"
 
       transactions:
         types:

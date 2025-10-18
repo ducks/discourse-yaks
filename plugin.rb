@@ -72,6 +72,7 @@ after_initialize do
 
   # Register custom fields
   register_post_custom_field_type("yak_features", :json)
+  register_topic_custom_field_type("yak_features", :json)
 
   # Allow custom field in topic view
   topic_view_post_custom_fields_allowlister do |user, topic|
@@ -86,6 +87,27 @@ after_initialize do
   ) do
     object.custom_fields["yak_features"]
   end
+
+  # Add yak_features to topic list item serializer
+  add_to_serializer(
+    :topic_list_item,
+    :yak_features,
+    include_condition: -> { object.custom_fields["yak_features"].present? }
+  ) do
+    object.custom_fields["yak_features"]
+  end
+
+  # Add yak_features to topic view serializer
+  add_to_serializer(
+    :topic_view,
+    :yak_features,
+    include_condition: -> { object.topic.custom_fields["yak_features"].present? }
+  ) do
+    object.topic.custom_fields["yak_features"]
+  end
+
+  # Preload topic custom fields to avoid N+1 queries
+  TopicList.preloaded_custom_fields << "yak_features" if TopicList.respond_to?(:preloaded_custom_fields)
 
   # Seed default features on plugin initialization
   DiscourseEvent.on(:site_setting_changed) do |name, old_value, new_value|
