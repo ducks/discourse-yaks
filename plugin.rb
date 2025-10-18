@@ -20,6 +20,14 @@ register_svg_icon "thumbtack"
 register_svg_icon "pencil"
 register_svg_icon "trash-can"
 register_svg_icon "plus"
+register_svg_icon "star"
+register_svg_icon "heart"
+register_svg_icon "fire"
+register_svg_icon "bolt"
+register_svg_icon "gem"
+register_svg_icon "crown"
+register_svg_icon "rocket"
+register_svg_icon "trophy"
 
 after_initialize do
   module ::DiscourseYaks
@@ -73,6 +81,7 @@ after_initialize do
   # Register custom fields
   register_post_custom_field_type("yak_features", :json)
   register_topic_custom_field_type("yak_features", :json)
+  register_user_custom_field_type("yak_features", :json)
 
   # Allow custom field in topic view
   topic_view_post_custom_fields_allowlister do |user, topic|
@@ -108,6 +117,94 @@ after_initialize do
 
   # Preload topic custom fields to avoid N+1 queries
   TopicList.preloaded_custom_fields << "yak_features" if TopicList.respond_to?(:preloaded_custom_fields)
+
+  # Preload user custom fields for flair
+  User.preloaded_custom_fields << "yak_features" if User.respond_to?(:preloaded_custom_fields)
+
+  # Override flair fields with yak custom flair if present
+  [:post, :user_card, :post_action_user].each do |serializer_name|
+    # Set a dummy flair_group_id so the frontend component renders flair
+    add_to_serializer(serializer_name, :flair_group_id) do
+      begin
+        user = serializer_name == :post ? object.user : object
+        flair = user.custom_fields["yak_features"]&.dig("flair")
+        if flair && flair["enabled"]
+          # Return -1 as a marker for "yak custom flair" (not a real group)
+          -1
+        else
+          user.flair_group_id
+        end
+      rescue => e
+        Rails.logger.error("Error in flair_group_id serializer: #{e.message}")
+        user = serializer_name == :post ? object.user : object
+        user.flair_group_id
+      end
+    end
+
+    add_to_serializer(serializer_name, :flair_url) do
+      begin
+        user = serializer_name == :post ? object.user : object
+        flair = user.custom_fields["yak_features"]&.dig("flair")
+        if flair && flair["enabled"]
+          flair["icon"]
+        else
+          user.flair_group&.flair_icon || user.flair_group&.flair_upload&.url
+        end
+      rescue => e
+        Rails.logger.error("Error in flair_url serializer: #{e.message}")
+        user = serializer_name == :post ? object.user : object
+        user.flair_group&.flair_icon || user.flair_group&.flair_upload&.url
+      end
+    end
+
+    add_to_serializer(serializer_name, :flair_bg_color) do
+      begin
+        user = serializer_name == :post ? object.user : object
+        flair = user.custom_fields["yak_features"]&.dig("flair")
+        if flair && flair["enabled"]
+          flair["bg_color"]
+        else
+          user.flair_group&.flair_bg_color
+        end
+      rescue => e
+        Rails.logger.error("Error in flair_bg_color serializer: #{e.message}")
+        user = serializer_name == :post ? object.user : object
+        user.flair_group&.flair_bg_color
+      end
+    end
+
+    add_to_serializer(serializer_name, :flair_color) do
+      begin
+        user = serializer_name == :post ? object.user : object
+        flair = user.custom_fields["yak_features"]&.dig("flair")
+        if flair && flair["enabled"]
+          flair["color"]
+        else
+          user.flair_group&.flair_color
+        end
+      rescue => e
+        Rails.logger.error("Error in flair_color serializer: #{e.message}")
+        user = serializer_name == :post ? object.user : object
+        user.flair_group&.flair_color
+      end
+    end
+
+    add_to_serializer(serializer_name, :flair_name) do
+      begin
+        user = serializer_name == :post ? object.user : object
+        flair = user.custom_fields["yak_features"]&.dig("flair")
+        if flair && flair["enabled"]
+          "yak-flair"
+        else
+          user.flair_group&.name
+        end
+      rescue => e
+        Rails.logger.error("Error in flair_name serializer: #{e.message}")
+        user = serializer_name == :post ? object.user : object
+        user.flair_group&.name
+      end
+    end
+  end
 
   # Seed default features on plugin initialization
   DiscourseEvent.on(:site_setting_changed) do |name, old_value, new_value|

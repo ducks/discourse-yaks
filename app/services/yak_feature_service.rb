@@ -9,6 +9,7 @@ class YakFeatureService
   # @param user [User] The user purchasing the feature
   # @param feature_key [String] The key of the feature to apply
   # @param related_post [Post, nil] The post to apply the feature to (if applicable)
+  # @param related_topic [Topic, nil] The topic to apply the feature to (if applicable)
   # @param feature_data [Hash] Additional data for the feature (colors, text, etc.)
   # @returns [Hash] Result with success status and data or error message
   def self.apply_feature(user, feature_key, related_post: nil, related_topic: nil, feature_data: {})
@@ -27,6 +28,11 @@ class YakFeatureService
     end
 
     if related_topic && !can_apply_to_topic?(user, related_topic, feature_key)
+      return { success: false, error: I18n.t("yaks.errors.already_applied") }
+    end
+
+    # For user-level features, check if user already has one active
+    if feature.category == "user" && !can_apply_to_user?(user, feature_key)
       return { success: false, error: I18n.t("yaks.errors.already_applied") }
     end
 
@@ -58,7 +64,7 @@ class YakFeatureService
       )
 
     # Apply effects based on what was provided
-    apply_feature_effects(feature, related_post: related_post, related_topic: topic, feature_data: feature_data)
+    apply_feature_effects(feature, user: user, related_post: related_post, related_topic: topic, feature_data: feature_data)
 
     # Schedule expiration job if feature has expiration time
     if expires_at
@@ -98,6 +104,19 @@ class YakFeatureService
     existing_uses.empty?
   end
 
+  # Checks if a feature can be applied to a user.
+  #
+  # @param user [User] The user attempting to apply the feature
+  # @param feature_key [String] The feature being applied
+  # @returns [Boolean] True if the feature can be applied
+  def self.can_apply_to_user?(user, feature_key)
+    return false unless user
+
+    existing_uses = YakFeatureUse.active.by_feature(feature_key).where(user_id: user.id)
+
+    existing_uses.empty?
+  end
+
   # Calculates the expiration time for a feature based on its settings.
   #
   # @param feature [YakFeature] The feature to calculate expiration for
@@ -115,12 +134,28 @@ class YakFeatureService
   # Applies visual and functional effects of a feature.
   #
   # @param feature [YakFeature] The feature being applied
+  # @param user [User] The user applying the feature
   # @param related_post [Post, nil] The post to apply effects to
   # @param related_topic [Topic, nil] The topic to apply effects to
   # @param feature_data [Hash] Additional feature configuration
   # @returns [void]
-  def self.apply_feature_effects(feature, related_post: nil, related_topic: nil, feature_data: {})
+  def self.apply_feature_effects(feature, user:, related_post: nil, related_topic: nil, feature_data: {})
     feature_key = feature.feature_key
+
+    # Handle user-specific features
+    case feature_key
+    when "custom_flair"
+      current_features = user.custom_fields["yak_features"] || {}
+      current_features["flair"] = {
+        enabled: true,
+        icon: feature_data[:icon] || "star",
+        bg_color: feature_data[:bg_color] || "FF0000",
+        color: feature_data[:color] || "FFFFFF",
+        applied_at: Time.zone.now.to_i,
+      }
+      user.custom_fields["yak_features"] = current_features
+      user.save_custom_fields
+    end
 
     # Handle post-specific features
     if related_post
@@ -172,6 +207,16 @@ class YakFeatureService
   # @returns [void]
   def self.remove_feature_effects(feature_use)
     feature_key = feature_use.yak_feature.feature_key
+    user = feature_use.user
+
+    # Handle user-specific feature removal
+    case feature_key
+    when "custom_flair"
+      current_features = user.custom_fields["yak_features"] || {}
+      current_features.delete("flair")
+      user.custom_fields["yak_features"] = current_features
+      user.save_custom_fields
+    end
 
     # Handle post-specific feature removal
     if feature_use.related_post

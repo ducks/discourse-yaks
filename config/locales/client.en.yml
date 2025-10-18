@@ -37,8 +37,8 @@ en:
           name: "Pin Post"
           description: "Pin your post to the top of a topic for 24 hours"
         custom_flair:
-          name: "Custom User Flair"
-          description: "Display custom flair next to your username for 30 days"
+          name: "Custom Avatar Flair"
+          description: "Add a custom badge next to your avatar for 30 days"
         post_boost:
           name: "Post Boost"
           description: "Boost your post in feeds and search for 72 hours"

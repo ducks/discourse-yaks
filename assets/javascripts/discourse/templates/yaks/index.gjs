@@ -1,10 +1,15 @@
 import Component from "@glimmer/component";
 import { service } from "@ember/service";
+import { action } from "@ember/object";
+import { on } from "@ember/modifier";
+import { eq } from "truth-helpers";
 import { i18n } from "discourse-i18n";
 import DButton from "discourse/components/d-button";
+import CustomFlairModal from "../../components/modal/custom-flair";
 
 export default class YaksWallet extends Component {
   @service router;
+  @service modal;
 
   get formattedTransactions() {
     return (this.args.model.transactions || []).map((tx) => {
@@ -17,6 +22,11 @@ export default class YaksWallet extends Component {
         displayAmount: Math.abs(tx.amount),
       };
     });
+  }
+
+  @action
+  openCustomFlairModal() {
+    this.modal.show(CustomFlairModal);
   }
 
   <template>
@@ -57,18 +67,37 @@ export default class YaksWallet extends Component {
           <h2>{{i18n "yaks.features.title"}}</h2>
           <div class="features-grid">
             {{#each @model.features as |feature|}}
-              <div class="feature-card">
-                <div class="feature-name">{{feature.name}}</div>
-                <div class="feature-description">{{feature.description}}</div>
-                <div class="feature-cost">
-                  <span class="cost">{{feature.cost}} Yaks</span>
-                  {{#if feature.affordable}}
-                    <span class="affordable">✓</span>
-                  {{else}}
-                    <span class="not-affordable">✗</span>
-                  {{/if}}
+              {{#if (eq feature.key "custom_flair")}}
+                <div
+                  class="feature-card clickable"
+                  role="button"
+                  {{on "click" this.openCustomFlairModal}}
+                >
+                  <div class="feature-name">{{feature.name}}</div>
+                  <div class="feature-description">{{feature.description}}</div>
+                  <div class="feature-cost">
+                    <span class="cost">{{feature.cost}} Yaks</span>
+                    {{#if feature.affordable}}
+                      <span class="affordable">✓</span>
+                    {{else}}
+                      <span class="not-affordable">✗</span>
+                    {{/if}}
+                  </div>
                 </div>
-              </div>
+              {{else}}
+                <div class="feature-card">
+                  <div class="feature-name">{{feature.name}}</div>
+                  <div class="feature-description">{{feature.description}}</div>
+                  <div class="feature-cost">
+                    <span class="cost">{{feature.cost}} Yaks</span>
+                    {{#if feature.affordable}}
+                      <span class="affordable">✓</span>
+                    {{else}}
+                      <span class="not-affordable">✗</span>
+                    {{/if}}
+                  </div>
+                </div>
+              {{/if}}
             {{/each}}
           </div>
         </section>
