@@ -2,10 +2,11 @@ import Component from "@glimmer/component";
 import { service } from "@ember/service";
 import { action } from "@ember/object";
 import { on } from "@ember/modifier";
-import { eq } from "truth-helpers";
+import { eq, or } from "truth-helpers";
 import { i18n } from "discourse-i18n";
 import DButton from "discourse/components/d-button";
 import CustomFlairModal from "../../components/modal/custom-flair";
+import CustomTitleModal from "../../components/modal/custom-title";
 
 export default class YaksWallet extends Component {
   @service router;
@@ -26,7 +27,14 @@ export default class YaksWallet extends Component {
 
   @action
   openCustomFlairModal() {
-    this.modal.show(CustomFlairModal);
+    const feature = this.args.model.features.find((f) => f.key === "custom_flair");
+    this.modal.show(CustomFlairModal, { model: { feature } });
+  }
+
+  @action
+  openCustomTitleModal() {
+    const feature = this.args.model.features.find((f) => f.key === "custom_title");
+    this.modal.show(CustomTitleModal, { model: { feature } });
   }
 
   <template>
@@ -67,11 +75,11 @@ export default class YaksWallet extends Component {
           <h2>{{i18n "yaks.features.title"}}</h2>
           <div class="features-grid">
             {{#each @model.features as |feature|}}
-              {{#if (eq feature.key "custom_flair")}}
+              {{#if (or (eq feature.key "custom_flair") (eq feature.key "custom_title"))}}
                 <div
                   class="feature-card clickable"
                   role="button"
-                  {{on "click" this.openCustomFlairModal}}
+                  {{on "click" (if (eq feature.key "custom_flair") this.openCustomFlairModal this.openCustomTitleModal)}}
                 >
                   <div class="feature-name">{{feature.name}}</div>
                   <div class="feature-description">{{feature.description}}</div>

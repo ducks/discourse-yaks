@@ -44,12 +44,20 @@ export default class CustomFlairModal extends Component {
     { id: "FFD700", name: "Gold", hex: "#FFD700" },
   ];
 
+  get feature() {
+    return this.args.model.feature;
+  }
+
+  get cost() {
+    return this.feature?.cost || 0;
+  }
+
   get balance() {
     return this.currentUser.yak_balance || 0;
   }
 
   get canAfford() {
-    return this.balance >= 200; // Cost from migration
+    return this.balance >= this.cost;
   }
 
   @action
@@ -116,7 +124,7 @@ export default class CustomFlairModal extends Component {
           <div class="balance-display">
             <strong>{{i18n "yaks.wallet.balance"}}:</strong>
             {{this.balance}}
-            Yaks (Cost: 200 Yaks)
+            Yaks (Cost: {{this.cost}} Yaks)
           </div>
 
           <div class="flair-preview">

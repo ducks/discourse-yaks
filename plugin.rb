@@ -205,6 +205,58 @@ after_initialize do
         user.flair_group&.name
       end
     end
+
+    # Override title with yak custom title if present
+    add_to_serializer(serializer_name, :title) do
+      begin
+        user = serializer_name == :post ? object.user : object
+        title_data = user.custom_fields["yak_features"]&.dig("title")
+        if title_data && title_data["enabled"]
+          title_data["text"]
+        else
+          user.title
+        end
+      rescue => e
+        Rails.logger.error("Error in title serializer: #{e.message}")
+        user = serializer_name == :post ? object.user : object
+        user.title
+      end
+    end
+  end
+
+  # Override title in additional serializers
+  [:user_name, :group_post_user, :group_user, :hidden_profile].each do |serializer_name|
+    add_to_serializer(serializer_name, :title) do
+      begin
+        title_data = object.custom_fields["yak_features"]&.dig("title")
+        if title_data && title_data["enabled"]
+          title_data["text"]
+        else
+          object.title
+        end
+      rescue => e
+        Rails.logger.error("Error in title serializer (#{serializer_name}): #{e.message}")
+        object.title
+      end
+    end
+  end
+
+  # Override user_title in post serializer (this is what shows next to posts)
+  add_to_serializer(:post, :user_title) do
+    begin
+      user = object&.user
+      return nil unless user
+
+      title_data = user.custom_fields["yak_features"]&.dig("title")
+      if title_data && title_data["enabled"]
+        title_data["text"]
+      else
+        user.title
+      end
+    rescue => e
+      Rails.logger.error("Error in user_title serializer: #{e.message}")
+      object&.user&.title
+    end
   end
 
   # Seed default features on plugin initialization

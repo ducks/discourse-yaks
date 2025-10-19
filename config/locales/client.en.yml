@@ -2,6 +2,9 @@ en:
   js:
     yaks:
       title: "Yak Management"
+      currency: "Yaks"
+      applying: "Applying..."
+      apply_custom_title: "Apply Custom Title"
 
       user_menu:
         balance: "%{count} Yaks"
@@ -48,6 +51,9 @@ en:
         topic_boost:
           name: "Boost Topic"
           description: "Pin your topic globally with visual highlighting"
+        custom_title:
+          name: "Custom User Title"
+          description: "Set a custom title displayed next to your username"
 
       transactions:
         types:
