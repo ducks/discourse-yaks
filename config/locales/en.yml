@@ -70,6 +70,10 @@ en:
       give_yaks: "Grant Yaks to User"
       transactions: "Transaction History"
       features: "Manage Features"
+      yes: "Yes"
+      no: "No"
+      edit: "Edit"
+      delete: "Delete"
       management:
         title: "Management"
         description: "Manage packages, features, and system statistics"
