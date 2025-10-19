@@ -12,19 +12,25 @@ A virtual currency system for Discourse forums that allows users to earn and spe
 ### Available Features
 
 **Currently Implemented:**
-1. **Post Highlighting** (25 Yaks) - Add a colored border and background to posts (gold, blue, red, green, purple)
-2. **Topic Pinning** (100 Yaks) - Pin topics to the top of their category for 24 hours
+1. **Post Highlighting** - Add a colored border and background to posts (gold, blue, red, green, purple)
+2. **Topic Pinning** - Pin topics to the top of their category for a limited time
+3. **Custom User Title** - Set a custom title displayed next to your username
+4. **Custom Avatar Flair** - Display custom flair badge next to your avatar
+5. **Topic Boost** - Pin topic globally with visual highlighting
+
+**All features support quantity purchases** - Buy multiple units to extend duration (e.g., 2x = double duration at 2x cost, up to 12x)
 
 **Planned Features:**
-3. **Post Pinning** (50 Yaks) - Pin posts to the top of topics for 24 hours
-4. **Custom User Flair** (100 Yaks) - Display custom flair for 30 days
-5. **Post Boost** (30 Yaks) - Priority in feeds and search for 72 hours
+6. **Post Pinning** - Pin posts to the top of topics
+7. **Post Boost** - Priority in feeds and search
 
 ### Admin Tools
 - System-wide statistics dashboard
 - Grant Yaks to users
 - View transaction history with filtering
 - Create and manage custom features
+- Edit earning rules (amount, daily caps, trust level requirements)
+- Manage purchase packages
 - Full audit logging
 
 ## Installation
@@ -79,16 +85,24 @@ Users can view their Yak balance at `/yaks` which shows:
 4. Confirm the purchase
 5. The feature is applied immediately and your balance is updated
 
-Note: Topic pins appear at the top of their category, not the global Latest feed.
+Note: Topic pins appear at the top of their category, not the global Latest feed. Topic boosts pin globally across all categories.
 
-#### Earning Yaks (Not Yet Implemented)
-Currently, users can only receive Yaks through:
+#### Earning Yaks
+Users can earn Yaks automatically through:
+- Creating posts
+- Creating topics
+- Receiving likes on posts
+- Having solutions accepted (with Solved plugin)
+
+All earning rules are configurable by admins:
+- Amount of Yaks awarded per action
+- Daily caps to prevent abuse
+- Minimum trust level requirements
+- Enable/disable specific rules
+
+Users can also receive Yaks through:
 - Admin grants
 - Purchases (stubbed endpoint, awaiting Stripe integration)
-
-Planned automatic earning system:
-- Quality posts that receive likes will earn Yaks automatically
-- Configurable thresholds and rewards via site settings
 
 #### Purchasing Yaks
 - Visit `/yaks/purchase` to see available packages
@@ -199,7 +213,7 @@ plugins/discourse-yaks/
 
 ## Current Status
 
-### ✅ Implemented (Version 20251012)
+### Implemented (Version 20251019)
 **Backend:**
 - Core wallet and transaction system
 - Database schema and migrations
@@ -208,44 +222,52 @@ plugins/discourse-yaks/
 - Controllers (user and admin endpoints)
 - Site settings configuration
 - Feature expiration system with background jobs
+- Earning system with configurable rules
+- Real-time balance updates via MessageBus
+- Quantity support for extended feature durations
 
 **Frontend:**
-- Balance display in user menu (reactive updates)
-- "Spend Yaks" button in post actions menu and topic footer
-- Modular feature selection modal (shows context-appropriate features)
-- Full wallet page (`/yaks`) with stats and transaction history
-- Purchase flow (`/yaks/purchase`) with configurable packages
-- Post highlighting with 5 color options (gold, blue, red, green, purple)
-- Topic pinning UI integrated with topic footer
-- Modern Discourse API patterns (no deprecated code)
+- Balance display in user menu with reactive updates
+- Spend Yaks button in post actions menu and topic footer
+- Modular feature selection modal with quantity support
+- Full wallet page with stats and transaction history
+- Purchase flow with configurable packages
+- Post highlighting with 5 color options
+- Topic pinning and boosting UI
+- Custom title and flair modals with live preview
+- Shared YakFeatureQuantity helper class
+- Modern Discourse API patterns
+
+**Admin UI:**
+- System statistics dashboard
+- Manage purchase packages
+- Edit features
+- Edit earning rules
+- Transaction history with filters
 
 **Features Working End-to-End:**
-- Post highlighting (purchase, apply, display, expiration)
-- Topic pinning (purchase, apply, automatic unpinning after 24h)
+- Post highlighting with expiration
+- Topic pinning and boosting
+- Custom user titles and avatar flair
+- Earning Yaks through posts, topics, likes, solutions
+- Quantity purchases for extended durations
 
-### 🚧 Next Steps
+### Next Steps
 1. **Implement Remaining Features**
-   - Post pinning logic and display (pin to top of topic)
+   - Post pinning logic and display
    - Post boost logic and display
-   - Custom user flair
-   - Topic highlighting/theming
 
-2. **Earning System**
-   - Background job for quality post detection
-   - Automatic Yak rewards based on likes
-   - Milestone rewards
-
-3. **Authorization & Security**
+2. **Authorization & Security**
    - Guardian implementation
    - Rate limiting on endpoints
    - Security audit
 
-4. **Payment Integration**
+3. **Payment Integration**
    - Replace stub with real Stripe integration
    - Webhook handlers
    - Refund processing
 
-5. **Testing**
+4. **Testing**
    - Controller request specs
    - System specs for UI interactions
    - JavaScript component tests
@@ -285,6 +307,6 @@ GPL v2 (same as Discourse)
 
 ---
 
-**Version**: 20251012
-**Status**: Alpha - Backend and frontend complete. Post highlighting and topic pinning working end-to-end with expiration system. Additional features (post pin/boost/flair) and earning system in development.
+**Version**: 20251019
+**Status**: Alpha - Backend and frontend complete. Five features working end-to-end with expiration system. Earning system operational. Admin UI fully functional.
 **Discourse Version**: Tested with Discourse 3.4+
