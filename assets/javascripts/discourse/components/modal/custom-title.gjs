@@ -3,25 +3,44 @@ import { service } from "@ember/service";
 import { action } from "@ember/object";
 import { tracked } from "@glimmer/tracking";
 import { on } from "@ember/modifier";
-import { or, not } from "truth-helpers";
+import { eq, or, not } from "truth-helpers";
 import { concat } from "@ember/helper";
 import DButton from "discourse/components/d-button";
 import DModal from "discourse/components/d-modal";
 import { i18n } from "discourse-i18n";
 import { ajax } from "discourse/lib/ajax";
 import { popupAjaxError } from "discourse/lib/ajax-error";
+import { YakFeatureQuantity } from "discourse/plugins/discourse-yaks/discourse/lib/yak-feature-quantity";
 
 export default class CustomTitleModal extends Component {
   @service currentUser;
   @tracked titleText = "";
   @tracked processing = false;
+  @tracked quantityCalc;
 
-  get feature() {
-    return this.args.model.feature;
+  constructor() {
+    super(...arguments);
+    this.quantityCalc = new YakFeatureQuantity(this.args.model.feature, 1);
   }
 
-  get cost() {
-    return this.feature?.cost || 0;
+  get quantity() {
+    return this.quantityCalc.quantity;
+  }
+
+  get baseCost() {
+    return this.quantityCalc.baseCost;
+  }
+
+  get totalCost() {
+    return this.quantityCalc.totalCost;
+  }
+
+  get baseDuration() {
+    return this.quantityCalc.baseDuration;
+  }
+
+  get totalDuration() {
+    return this.quantityCalc.totalDuration;
   }
 
   get balance() {
@@ -29,7 +48,7 @@ export default class CustomTitleModal extends Component {
   }
 
   get canAfford() {
-    return this.balance >= this.cost;
+    return this.quantityCalc.canAfford(this.balance);
   }
 
   get canSubmit() {
@@ -42,6 +61,13 @@ export default class CustomTitleModal extends Component {
   }
 
   @action
+  updateQuantity(event) {
+    this.quantityCalc.quantity = event.target.value;
+    // Force Ember to notice the change
+    this.quantityCalc = this.quantityCalc;
+  }
+
+  @action
   async applyTitle() {
     if (!this.canSubmit) return;
 
@@ -50,6 +76,7 @@ export default class CustomTitleModal extends Component {
     try {
       const data = {
         feature_key: "custom_title",
+        quantity: this.quantity,
         feature_data: {
           text: this.titleText.trim(),
         },
@@ -96,6 +123,22 @@ export default class CustomTitleModal extends Component {
             </div>
           </div>
 
+          <div class="form-group">
+            <label for="quantity-input">Duration (months)</label>
+            <input
+              id="quantity-input"
+              type="number"
+              class="quantity-input"
+              min="1"
+              max="12"
+              value={{this.quantity}}
+              {{on "input" this.updateQuantity}}
+            />
+            <div class="duration-display">
+              {{this.totalDuration}} days ({{this.quantity}} month{{#if (not (eq this.quantity 1))}}s{{/if}})
+            </div>
+          </div>
+
           <div class="preview-section">
             <h4>Preview</h4>
             <div class="title-preview">
@@ -109,7 +152,7 @@ export default class CustomTitleModal extends Component {
           </div>
 
           <div class="cost-info">
-            <strong>Cost:</strong> {{this.cost}} Yaks
+            <strong>Cost:</strong> {{this.totalCost}} Yaks ({{this.baseCost}} × {{this.quantity}})
             <br />
             <strong>Your Balance:</strong> {{this.balance}} Yaks
             {{#if (not this.canAfford)}}
@@ -128,7 +171,7 @@ export default class CustomTitleModal extends Component {
           @translatedLabel={{if
             this.processing
             (i18n "yaks.applying")
-            (concat (i18n "yaks.apply_custom_title") " (" this.cost " " (i18n "yaks.currency") ")")
+            (concat (i18n "yaks.apply_custom_title") " (" this.totalCost " " (i18n "yaks.currency") ")")
           }}
           class="btn-primary"
         />

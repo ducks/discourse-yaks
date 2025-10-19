@@ -11,13 +11,20 @@ class YakFeatureService
   # @param related_post [Post, nil] The post to apply the feature to (if applicable)
   # @param related_topic [Topic, nil] The topic to apply the feature to (if applicable)
   # @param feature_data [Hash] Additional data for the feature (colors, text, etc.)
+  # @param quantity [Integer] Number of units to purchase (extends duration)
   # @returns [Hash] Result with success status and data or error message
-  def self.apply_feature(user, feature_key, related_post: nil, related_topic: nil, feature_data: {})
+  def self.apply_feature(user, feature_key, related_post: nil, related_topic: nil, feature_data: {}, quantity: 1)
     feature = YakFeature.enabled.find_by(feature_key: feature_key)
     return { success: false, error: I18n.t("yaks.errors.feature_not_found") } unless feature
 
-    return { success: false, error: I18n.t("yaks.errors.insufficient_balance") } unless feature
-             .affordable_by?(user)
+    # Validate quantity
+    quantity = [quantity.to_i, 1].max  # Minimum 1
+    quantity = [quantity, 12].min  # Maximum 12
+
+    total_cost = feature.cost * quantity
+
+    return { success: false, error: I18n.t("yaks.errors.insufficient_balance") } unless user
+             .yak_balance >= total_cost
 
     # Derive topic from post if not provided
     topic = related_topic || related_post&.topic
@@ -40,17 +47,17 @@ class YakFeatureService
 
     transaction =
       wallet.spend_yaks(
-        feature.cost,
+        total_cost,
         feature_key,
-        "Applied #{feature.feature_name}",
+        "Applied #{feature.feature_name} (×#{quantity})",
         related_post_id: related_post&.id,
         related_topic_id: topic&.id,
-        metadata: feature_data,
+        metadata: feature_data.merge(quantity: quantity),
       )
 
     return { success: false, error: I18n.t("yaks.errors.insufficient_balance") } unless transaction
 
-    expires_at = calculate_expiration(feature)
+    expires_at = calculate_expiration(feature, quantity: quantity)
 
     feature_use =
       YakFeatureUse.create!(
@@ -120,14 +127,15 @@ class YakFeatureService
   # Calculates the expiration time for a feature based on its settings.
   #
   # @param feature [YakFeature] The feature to calculate expiration for
+  # @param quantity [Integer] Number of units purchased (multiplies duration)
   # @returns [Time, nil] The expiration time or nil for permanent features
-  def self.calculate_expiration(feature)
+  def self.calculate_expiration(feature, quantity: 1)
     return nil unless feature.settings
 
     if feature.settings["duration_hours"]
-      feature.settings["duration_hours"].hours.from_now
+      (feature.settings["duration_hours"] * quantity).hours.from_now
     elsif feature.settings["duration_days"]
-      feature.settings["duration_days"].days.from_now
+      (feature.settings["duration_days"] * quantity).days.from_now
     end
   end
 

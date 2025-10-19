@@ -52,6 +52,7 @@ class YaksController < ApplicationController
     post_id = params[:post_id]
     topic_id = params[:topic_id]
     feature_data = params[:feature_data]
+    quantity = params[:quantity]&.to_i || 1
 
     post = Post.find_by(id: post_id) if post_id
     topic = Topic.find_by(id: topic_id) if topic_id
@@ -72,6 +73,7 @@ class YaksController < ApplicationController
         related_post: post,
         related_topic: topic,
         feature_data: feature_data_hash,
+        quantity: quantity,
       )
 
     if result[:success]
