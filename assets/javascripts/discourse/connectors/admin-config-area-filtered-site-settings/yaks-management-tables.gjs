@@ -9,6 +9,7 @@ import DButton from "discourse/components/d-button";
 import EditYakPackageModal from "../../components/modal/edit-yak-package";
 import NewYakPackageModal from "../../components/modal/new-yak-package";
 import EditYakFeatureModal from "../../components/modal/edit-yak-feature";
+import EditYakEarningRuleModal from "../../components/modal/edit-yak-earning-rule";
 
 export default class YaksManagementTables extends Component {
   @service modal;
@@ -79,6 +80,16 @@ export default class YaksManagementTables extends Component {
   async editFeature(feature) {
     const result = await this.modal.show(EditYakFeatureModal, {
       model: { feature },
+    });
+    if (result) {
+      await this.loadData();
+    }
+  }
+
+  @action
+  async editEarningRule(rule) {
+    const result = await this.modal.show(EditYakEarningRuleModal, {
+      model: { rule },
     });
     if (result) {
       await this.loadData();
@@ -178,7 +189,7 @@ export default class YaksManagementTables extends Component {
                 <td>{{feature.cost}} {{i18n "yaks.admin.features.yaks"}}</td>
                 <td>{{feature.duration_hours}} {{i18n "yaks.admin.features.hours"}}</td>
                 <td>{{feature.category}}</td>
-                <td>{{if feature.enabled (i18n "yaks.yes") (i18n "yaks.no")}}</td>
+                <td>{{if feature.enabled (i18n "yaks.admin.yes") (i18n "yaks.admin.no")}}</td>
                 <td>
                   <DButton
                     @action={{fn this.editFeature feature}}
@@ -206,6 +217,7 @@ export default class YaksManagementTables extends Component {
               <th>{{i18n "yaks.admin.earning_rules.daily_cap"}}</th>
               <th>{{i18n "yaks.admin.earning_rules.min_trust_level"}}</th>
               <th>{{i18n "yaks.admin.earning_rules.enabled"}}</th>
+              <th>{{i18n "yaks.admin.packages.actions"}}</th>
             </tr>
           </thead>
           <tbody>
@@ -217,6 +229,14 @@ export default class YaksManagementTables extends Component {
                 <td>{{if rule.daily_cap rule.daily_cap (i18n "yaks.admin.earning_rules.no_cap")}}</td>
                 <td>TL{{rule.min_trust_level}}</td>
                 <td>{{if rule.enabled (i18n "yaks.admin.yes") (i18n "yaks.admin.no")}}</td>
+                <td>
+                  <DButton
+                    @action={{fn this.editEarningRule rule}}
+                    @translatedLabel={{i18n "yaks.admin.edit"}}
+                    @icon="pencil"
+                    class="btn-small"
+                  />
+                </td>
               </tr>
             {{/each}}
           </tbody>

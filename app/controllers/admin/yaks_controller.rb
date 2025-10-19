@@ -238,61 +238,72 @@ module Admin
     rescue StandardError => e
       render json: { success: false, error: e.message }, status: :unprocessable_entity
     end
-  end
 
-  # Returns all earning rules.
-  def earning_rules
-    ensure_logged_in
+    # Returns system statistics.
+    #
+    # @returns [JSON] System-wide stats
+    def stats
+      render json: {
+               total_wallets: YakWallet.count,
+               total_yaks_in_circulation: YakWallet.sum(:balance),
+               active_features: YakFeatureUse.active.count,
+             }
+    end
 
-    rules = YakEarningRule.order(:action_key)
+    # Returns all earning rules.
+    #
+    # @returns [JSON] All earning rules
+    def earning_rules
+      rules = YakEarningRule.order(:action_key)
 
-    render json: {
-             earning_rules:
-               rules.map do |r|
-                 {
-                   id: r.id,
-                   action_key: r.action_key,
-                   action_name: r.action_name,
-                   description: r.description,
-                   amount: r.amount,
-                   daily_cap: r.daily_cap,
-                   min_trust_level: r.min_trust_level,
-                   enabled: r.enabled,
-                   settings: r.settings || {},
-                 }
-               end,
-           }
-  end
+      render json: {
+               earning_rules:
+                 rules.map do |r|
+                   {
+                     id: r.id,
+                     action_key: r.action_key,
+                     action_name: r.action_name,
+                     description: r.description,
+                     amount: r.amount,
+                     daily_cap: r.daily_cap,
+                     min_trust_level: r.min_trust_level,
+                     enabled: r.enabled,
+                     settings: r.settings || {},
+                   }
+                 end,
+             }
+    end
 
-  # Updates an existing earning rule.
-  def update_earning_rule
-    ensure_logged_in
+    # Updates an existing earning rule.
+    #
+    # @returns [JSON] The updated earning rule
+    def update_earning_rule
+      rule = YakEarningRule.find(params[:id])
 
-    rule = YakEarningRule.find(params[:id])
+      rule.update!(
+        amount: params[:amount].to_i,
+        daily_cap: params[:daily_cap].to_i,
+        min_trust_level: params[:min_trust_level].to_i,
+        enabled: params[:enabled],
+        settings: params[:settings] || {},
+      )
 
-    rule.update!(
-      amount: params[:amount].to_i,
-      daily_cap: params[:daily_cap].to_i,
-      min_trust_level: params[:min_trust_level].to_i,
-      enabled: params[:enabled],
-      settings: params[:settings] || {},
-    )
-
-    render json: {
-             success: true,
-             earning_rule: {
-               id: rule.id,
-               action_key: rule.action_key,
-               action_name: rule.action_name,
-               description: rule.description,
-               amount: rule.amount,
-               daily_cap: rule.daily_cap,
-               min_trust_level: rule.min_trust_level,
-               enabled: rule.enabled,
-               settings: rule.settings || {},
-             },
-           }
-  rescue StandardError => e
-    render json: { success: false, error: e.message }, status: :unprocessable_entity
+      render json: {
+               success: true,
+               earning_rule: {
+                 id: rule.id,
+                 action_key: rule.action_key,
+                 action_name: rule.action_name,
+                 description: rule.description,
+                 amount: rule.amount,
+                 daily_cap: rule.daily_cap,
+                 min_trust_level: rule.min_trust_level,
+                 enabled: rule.enabled,
+                 settings: rule.settings || {},
+               },
+             }
+    rescue StandardError => e
+      render json: { success: false, error: e.message }, status: :unprocessable_entity
+    end
   end
 end
