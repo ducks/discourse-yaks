@@ -16,6 +16,12 @@ export default {
         return;
       }
 
+      // Subscribe to balance updates via MessageBus
+      const messageBus = container.lookup("service:message-bus");
+      messageBus.subscribe(`/yak-balance/${currentUser.id}`, (data) => {
+        currentUser.set("yak_balance", data.balance);
+      });
+
       // Add balance display to user menu profile tab
       api.addQuickAccessProfileItem({
         icon: "dollar-sign",

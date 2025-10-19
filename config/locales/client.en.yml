@@ -107,3 +107,12 @@ en:
           actions: "Actions"
           yaks: "Yaks"
           hours: "hours"
+        earning_rules:
+          title: "Earning Rules"
+          action: "Action"
+          description: "Description"
+          amount: "Amount"
+          daily_cap: "Daily Cap"
+          min_trust_level: "Min Trust Level"
+          enabled: "Enabled"
+          no_cap: "No limit"
