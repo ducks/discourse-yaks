@@ -15,6 +15,7 @@ export default class YaksManagementTables extends Component {
   @tracked stats = null;
   @tracked features = [];
   @tracked packages = [];
+  @tracked earningRules = [];
   @tracked loading = true;
 
   constructor() {
@@ -27,10 +28,12 @@ export default class YaksManagementTables extends Component {
       const statsData = await ajax("/admin/plugins/yaks/stats");
       const featuresData = await ajax("/admin/plugins/yaks/features");
       const packagesData = await ajax("/admin/plugins/yaks/packages");
+      const earningRulesData = await ajax("/admin/plugins/yaks/earning_rules");
 
       this.stats = statsData;
       this.features = featuresData.features;
       this.packages = packagesData.packages;
+      this.earningRules = earningRulesData.earning_rules;
     } catch (error) {
       console.error("Error loading Yaks data:", error);
     } finally {
@@ -184,6 +187,36 @@ export default class YaksManagementTables extends Component {
                     class="btn-small"
                   />
                 </td>
+              </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+    {{/if}}
+
+    {{#if this.earningRules}}
+      <div class="admin-yaks-earning-rules">
+        <h3>{{i18n "yaks.admin.earning_rules.title"}}</h3>
+        <table class="yak-earning-rules-table">
+          <thead>
+            <tr>
+              <th>{{i18n "yaks.admin.earning_rules.action"}}</th>
+              <th>{{i18n "yaks.admin.earning_rules.description"}}</th>
+              <th>{{i18n "yaks.admin.earning_rules.amount"}}</th>
+              <th>{{i18n "yaks.admin.earning_rules.daily_cap"}}</th>
+              <th>{{i18n "yaks.admin.earning_rules.min_trust_level"}}</th>
+              <th>{{i18n "yaks.admin.earning_rules.enabled"}}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each this.earningRules as |rule|}}
+              <tr>
+                <td>{{rule.action_name}}</td>
+                <td>{{rule.description}}</td>
+                <td>{{rule.amount}} {{i18n "yaks.currency"}}</td>
+                <td>{{if rule.daily_cap rule.daily_cap (i18n "yaks.admin.earning_rules.no_cap")}}</td>
+                <td>TL{{rule.min_trust_level}}</td>
+                <td>{{if rule.enabled (i18n "yaks.admin.yes") (i18n "yaks.admin.no")}}</td>
               </tr>
             {{/each}}
           </tbody>

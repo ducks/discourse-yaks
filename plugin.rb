@@ -49,6 +49,8 @@ after_initialize do
   require_relative "app/controllers/admin/yaks_controller"
   require_relative "app/jobs/regular/expire_yak_feature"
   require_relative "app/jobs/scheduled/cleanup_expired_yak_features"
+  require_relative "app/services/yak_earning_service"
+  require_relative "app/models/yak_earning_rule"
 
   # Add yak_balance method to User model
   add_to_class(:user, :yak_balance) do
@@ -72,6 +74,8 @@ after_initialize do
     post "/admin/plugins/yaks/packages" => "admin/yaks#create_package", constraints: StaffConstraint.new
     put "/admin/plugins/yaks/packages/:id" => "admin/yaks#update_package", constraints: StaffConstraint.new
     delete "/admin/plugins/yaks/packages/:id" => "admin/yaks#delete_package", constraints: StaffConstraint.new
+    get "/admin/plugins/yaks/earning_rules" => "admin/yaks#earning_rules", constraints: StaffConstraint.new
+    put "/admin/plugins/yaks/earning_rules/:id" => "admin/yaks#update_earning_rule", constraints: StaffConstraint.new
   end
 
   add_to_serializer(:current_user, :yak_balance) do
@@ -269,5 +273,64 @@ after_initialize do
   # Automatically create wallet for new users
   DiscourseEvent.on(:user_created) do |user|
     YakWallet.for_user(user)
+  end
+
+  # Earning system event hooks
+  DiscourseEvent.on(:post_created) do |post, opts, user|
+    Rails.logger.info("[Yaks] Post created event fired for post #{post.id}")
+    next if post.post_type != Post.types[:regular]
+    next if post.deleted_at.present?
+    next if post.hidden
+    next if !post.user
+
+    Rails.logger.info("[Yaks] Attempting to award Yaks to user #{post.user.id} for post creation")
+    result = YakEarningService.award(
+      user: post.user,
+      action_key: "post_created",
+      related_post: post,
+      related_topic: post.topic,
+    )
+    Rails.logger.info("[Yaks] Award result: #{result}")
+  end
+
+  DiscourseEvent.on(:topic_created) do |topic, opts, user|
+    next if topic.deleted_at.present?
+    next if !topic.visible
+    next if !topic.user
+
+    YakEarningService.award(
+      user: topic.user,
+      action_key: "topic_created",
+      related_topic: topic,
+    )
+  end
+
+  DiscourseEvent.on(:like_created) do |post_action|
+    post = post_action.post
+    next if !post
+    next if post.deleted_at.present?
+    next if post.hidden
+    next if post.user_id == post_action.user_id # Don't reward self-likes
+
+    YakEarningService.award(
+      user: post.user,
+      action_key: "post_liked",
+      related_post: post,
+      related_topic: post.topic,
+    )
+  end
+
+  # Hook for discourse-solved plugin (if installed)
+  DiscourseEvent.on(:accepted_solution) do |post|
+    next if !post
+    next if post.deleted_at.present?
+    next if post.hidden
+
+    YakEarningService.award(
+      user: post.user,
+      action_key: "solution_accepted",
+      related_post: post,
+      related_topic: post.topic,
+    )
   end
 end
