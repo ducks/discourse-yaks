@@ -10,13 +10,20 @@ import DModal from "discourse/components/d-modal";
 import { i18n } from "discourse-i18n";
 import { ajax } from "discourse/lib/ajax";
 import { popupAjaxError } from "discourse/lib/ajax-error";
+import { YakFeatureQuantity } from "discourse/plugins/discourse-yaks/discourse/lib/yak-feature-quantity";
 
 export default class CustomFlairModal extends Component {
   @service currentUser;
   @tracked selectedIcon = "star";
   @tracked selectedBgColor = "FF0000";
   @tracked selectedColor = "FFFFFF";
+  @tracked quantityCalc;
   @tracked processing = false;
+
+  constructor() {
+    super(...arguments);
+    this.quantityCalc = new YakFeatureQuantity(this.args.model.feature, 1);
+  }
 
   icons = [
     { id: "star", name: "Star" },
@@ -44,12 +51,24 @@ export default class CustomFlairModal extends Component {
     { id: "FFD700", name: "Gold", hex: "#FFD700" },
   ];
 
-  get feature() {
-    return this.args.model.feature;
+  get quantity() {
+    return this.quantityCalc.quantity;
   }
 
-  get cost() {
-    return this.feature?.cost || 0;
+  get baseCost() {
+    return this.quantityCalc.baseCost;
+  }
+
+  get totalCost() {
+    return this.quantityCalc.totalCost;
+  }
+
+  get baseDuration() {
+    return this.quantityCalc.baseDuration;
+  }
+
+  get totalDuration() {
+    return this.quantityCalc.totalDuration;
   }
 
   get balance() {
@@ -57,7 +76,7 @@ export default class CustomFlairModal extends Component {
   }
 
   get canAfford() {
-    return this.balance >= this.cost;
+    return this.quantityCalc.canAfford(this.balance);
   }
 
   @action
@@ -76,6 +95,13 @@ export default class CustomFlairModal extends Component {
   }
 
   @action
+  updateQuantity(event) {
+    this.quantityCalc.quantity = event.target.value;
+    // Force Ember to notice the change
+    this.quantityCalc = this.quantityCalc;
+  }
+
+  @action
   async applyFlair() {
     if (!this.canAfford) return;
 
@@ -84,6 +110,7 @@ export default class CustomFlairModal extends Component {
     try {
       const data = {
         feature_key: "custom_flair",
+        quantity: this.quantity,
         feature_data: {
           icon: this.selectedIcon,
           bg_color: this.selectedBgColor,
@@ -124,7 +151,32 @@ export default class CustomFlairModal extends Component {
           <div class="balance-display">
             <strong>{{i18n "yaks.wallet.balance"}}:</strong>
             {{this.balance}}
-            Yaks (Cost: {{this.cost}} Yaks)
+            Yaks
+          </div>
+
+          <div class="form-group">
+            <label for="quantity-input">Duration (months)</label>
+            <input
+              id="quantity-input"
+              type="number"
+              class="quantity-input"
+              min="1"
+              max="12"
+              value={{this.quantity}}
+              {{on "input" this.updateQuantity}}
+            />
+            <div class="duration-display">
+              {{this.totalDuration}} days ({{this.quantity}} month{{#if (not (eq this.quantity 1))}}s{{/if}})
+            </div>
+          </div>
+
+          <div class="cost-info">
+            <strong>Cost:</strong> {{this.totalCost}} Yaks ({{this.baseCost}} × {{this.quantity}})
+            {{#if (not this.canAfford)}}
+              <div class="insufficient-balance">
+                Insufficient balance!
+              </div>
+            {{/if}}
           </div>
 
           <div class="flair-preview">
@@ -191,12 +243,6 @@ export default class CustomFlairModal extends Component {
               {{/each}}
             </div>
           </div>
-
-          {{#unless this.canAfford}}
-            <div class="insufficient-balance">
-              {{i18n "yaks.errors.insufficient_balance"}}
-            </div>
-          {{/unless}}
         </div>
       </:body>
 
