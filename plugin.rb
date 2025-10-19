@@ -117,6 +117,7 @@ after_initialize do
 
   # Preload topic custom fields to avoid N+1 queries
   TopicList.preloaded_custom_fields << "yak_features" if TopicList.respond_to?(:preloaded_custom_fields)
+  Topic.preloaded_custom_fields << "yak_features" if Topic.respond_to?(:preloaded_custom_fields)
 
   # Preload user custom fields for flair
   User.preloaded_custom_fields << "yak_features" if User.respond_to?(:preloaded_custom_fields)
