@@ -813,3 +813,85 @@
     transform: translateY(0);
   }
 }
+
+// Custom Title Modal
+.custom-title-modal {
+  .custom-title-form {
+    .form-group {
+      margin-bottom: 24px;
+
+      label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 8px;
+      }
+
+      .title-input {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+        border: 2px solid var(--primary-low);
+        border-radius: 4px;
+        background: var(--secondary);
+        color: var(--primary);
+
+        &:focus {
+          outline: none;
+          border-color: var(--tertiary);
+        }
+      }
+
+      .character-count {
+        margin-top: 4px;
+        font-size: 0.9em;
+        color: var(--primary-medium);
+        text-align: right;
+      }
+    }
+
+    .preview-section {
+      margin-bottom: 24px;
+      padding: 16px;
+      background: var(--primary-very-low);
+      border-radius: 4px;
+
+      h4 {
+        margin: 0 0 12px 0;
+      }
+
+      .title-preview {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .username {
+          font-weight: bold;
+          font-size: 16px;
+        }
+
+        .user-title {
+          font-size: 14px;
+          color: var(--primary-medium);
+          font-style: italic;
+
+          &.placeholder {
+            opacity: 0.5;
+          }
+        }
+      }
+    }
+
+    .cost-info {
+      padding: 12px;
+      background: var(--highlight-low);
+      border-radius: 4px;
+      font-size: 14px;
+
+      .insufficient-balance {
+        margin-top: 8px;
+        color: var(--danger);
+        font-weight: bold;
+      }
+    }
+  }
+}

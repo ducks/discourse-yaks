@@ -155,6 +155,15 @@ class YakFeatureService
       }
       user.custom_fields["yak_features"] = current_features
       user.save_custom_fields
+    when "custom_title"
+      current_features = user.custom_fields["yak_features"] || {}
+      current_features["title"] = {
+        enabled: true,
+        text: feature_data[:text] || "Yak Supporter",
+        applied_at: Time.zone.now.to_i,
+      }
+      user.custom_fields["yak_features"] = current_features
+      user.save_custom_fields
     end
 
     # Handle post-specific features
@@ -214,6 +223,11 @@ class YakFeatureService
     when "custom_flair"
       current_features = user.custom_fields["yak_features"] || {}
       current_features.delete("flair")
+      user.custom_fields["yak_features"] = current_features
+      user.save_custom_fields
+    when "custom_title"
+      current_features = user.custom_fields["yak_features"] || {}
+      current_features.delete("title")
       user.custom_fields["yak_features"] = current_features
       user.save_custom_fields
     end
