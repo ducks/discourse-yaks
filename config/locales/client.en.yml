@@ -30,6 +30,7 @@ en:
       purchase:
         buy_now: "Buy Now"
         back_to_wallet: "Back to Wallet"
+        unavailable: "Yak purchases are currently unavailable."
 
       features:
         title: "Available Features"

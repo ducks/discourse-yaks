@@ -62,7 +62,6 @@ after_initialize do
     get "/yaks" => "yaks#index"
     get "/yaks/purchase" => "yaks#index"
     post "/yaks/spend" => "yaks#spend"
-    post "/yaks/purchase" => "yaks#purchase"
 
     get "/admin/plugins/yaks/stats" => "admin/yaks#stats", constraints: StaffConstraint.new
     post "/admin/plugins/yaks/give" => "admin/yaks#give_yaks", constraints: StaffConstraint.new
