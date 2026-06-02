@@ -87,26 +87,4 @@ class YaksController < ApplicationController
     end
   end
 
-  # Handles Stripe payment (stubbed for now).
-  #
-  # @returns [JSON] Success status
-  def purchase
-    amount_usd = params.require(:amount).to_f
-    yaks_to_add = (amount_usd * SiteSetting.yaks_dollar_to_yak_rate).to_i
-
-    wallet = YakWallet.for_user(current_user)
-    transaction =
-      wallet.add_yaks(
-        yaks_to_add,
-        "stripe_purchase_stub",
-        "Purchased #{yaks_to_add} Yaks for $#{amount_usd}",
-        { amount_usd: amount_usd, payment_method: "stub" },
-      )
-
-    if transaction
-      render json: { success: true, new_balance: current_user.yak_balance, yaks_added: yaks_to_add }
-    else
-      render json: { success: false, error: "Purchase failed" }, status: :unprocessable_entity
-    end
-  end
 end

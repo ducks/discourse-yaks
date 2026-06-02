@@ -4,7 +4,6 @@ import { action } from "@ember/object";
 import { on } from "@ember/modifier";
 import { eq, or } from "truth-helpers";
 import { i18n } from "discourse-i18n";
-import DButton from "discourse/components/d-button";
 import CustomFlairModal from "../../components/modal/custom-flair";
 import CustomTitleModal from "../../components/modal/custom-title";
 
@@ -47,12 +46,6 @@ export default class YaksWallet extends Component {
             Yaks
           </div>
         </div>
-        <DButton
-          @route="yaks.purchase"
-          @label="yaks.wallet.purchase_yaks"
-          @icon="coins"
-          class="btn-primary"
-        />
       </div>
 
       <div class="wallet-stats">
