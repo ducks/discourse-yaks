@@ -44,7 +44,7 @@ hooks:
     - exec:
         cd: $home/plugins
         cmd:
-          - git clone https://github.com/discourse/discourse-yaks.git
+          - git clone https://github.com/ducks/discourse-yaks.git
 ```
 
 2. Rebuild your container:

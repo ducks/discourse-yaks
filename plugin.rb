@@ -3,8 +3,8 @@
 # name: discourse-yaks
 # about: Virtual currency system for Discourse - earn and spend Yaks on premium features
 # version: 0.1.0
-# authors: Discourse
-# url: https://github.com/discourse/discourse-yaks
+# authors: ducks
+# url: https://github.com/ducks/discourse-yaks
 
 enabled_site_setting :yaks_enabled
 
