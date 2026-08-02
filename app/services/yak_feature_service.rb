@@ -6,6 +6,11 @@
 class YakFeatureService
   TOPIC_PIN_FEATURE_KEYS = %w[topic_pin topic_boost].freeze
   PREVIOUS_PIN_STATE_KEY = "_yak_previous_pin_state"
+  HIGHLIGHT_COLORS = %w[gold blue red green purple].freeze
+  FLAIR_ICONS = %w[star heart fire bolt gem crown rocket trophy].freeze
+  FLAIR_BACKGROUND_COLORS = %w[FF0000 0000FF 00FF00 FFD700 9370DB FF1493].freeze
+  FLAIR_TEXT_COLORS = %w[FFFFFF 000000 FFD700].freeze
+  MAX_CUSTOM_TITLE_LENGTH = 50
   # Applies a feature to a post or user profile.
   #
   # @param user [User] The user purchasing the feature
@@ -42,6 +47,10 @@ class YakFeatureService
         related_topic: related_topic
       )
     return { success: false, error: target_error } if target_error
+
+    feature_data_error, feature_data =
+      validate_feature_data(feature, feature_data)
+    return { success: false, error: feature_data_error } if feature_data_error
 
     # Derive topic from post if not provided
     topic = related_topic || related_post&.topic
@@ -252,6 +261,53 @@ class YakFeatureService
     end
 
     nil
+  end
+
+  def self.validate_feature_data(feature, raw_data)
+    data = raw_data.to_h.with_indifferent_access
+    allowed_keys =
+      case feature.feature_key
+      when "post_highlight", "topic_boost"
+        %w[color]
+      when "custom_flair"
+        %w[icon bg_color color]
+      when "custom_title"
+        %w[text]
+      else
+        []
+      end
+
+    return invalid_feature_data if (data.keys - allowed_keys).any?
+
+    case feature.feature_key
+    when "post_highlight", "topic_boost"
+      if data[:color] && !HIGHLIGHT_COLORS.include?(data[:color])
+        return invalid_feature_data
+      end
+    when "custom_flair"
+      if data[:icon] && !FLAIR_ICONS.include?(data[:icon])
+        return invalid_feature_data
+      end
+      if data[:bg_color] && !FLAIR_BACKGROUND_COLORS.include?(data[:bg_color])
+        return invalid_feature_data
+      end
+      if data[:color] && !FLAIR_TEXT_COLORS.include?(data[:color])
+        return invalid_feature_data
+      end
+    when "custom_title"
+      text = data[:text]
+      if !text.is_a?(String) || text.strip.blank? ||
+           text.length > MAX_CUSTOM_TITLE_LENGTH || text.match?(/[[:cntrl:]]/)
+        return invalid_feature_data
+      end
+      data[:text] = text.strip
+    end
+
+    [nil, data]
+  end
+
+  def self.invalid_feature_data
+    [I18n.t("yaks.errors.invalid_feature_data"), nil]
   end
 
   def self.lock_feature_target!(user, feature, related_post:, related_topic:)

@@ -8,7 +8,13 @@ class YakEarningService
   # @param related_post [Post, nil] Optional post related to the earning
   # @param related_topic [Topic, nil] Optional topic related to the earning
   # @returns [Boolean] True if Yaks were awarded, false if denied
-  def self.award(user:, action_key:, related_post: nil, related_topic: nil)
+  def self.award(
+    user:,
+    action_key:,
+    related_post: nil,
+    related_topic: nil,
+    event_id: nil
+  )
     return false unless SiteSetting.yaks_earning_enabled
 
     # Get the earning rule
@@ -41,8 +47,22 @@ class YakEarningService
 
     wallet = YakWallet.find_or_create_by(user: user)
     transaction = nil
+    idempotency_key =
+      earning_idempotency_key(
+        action_key,
+        event_id: event_id,
+        related_post: related_post,
+        related_topic: related_topic
+      )
 
     wallet.with_lock do
+      if already_awarded?(wallet, action_key, idempotency_key)
+        Rails.logger.info(
+          "[Yaks] Award skipped: Event already rewarded (#{idempotency_key})"
+        )
+        return false
+      end
+
       if rule.has_daily_cap?
         earned_today = get_daily_earning_count(user, action_key)
         if earned_today >= rule.daily_cap
@@ -60,7 +80,8 @@ class YakEarningService
           "Earned from: #{rule.action_name}",
           {
             related_post_id: related_post&.id,
-            related_topic_id: related_topic&.id
+            related_topic_id: related_topic&.id,
+            idempotency_key: idempotency_key
           }
         )
     end
@@ -89,18 +110,38 @@ class YakEarningService
     wallet = YakWallet.find_by(user: user)
     return 0 if !wallet
 
-    rule = YakEarningRule.find_by(action_key: action_key)
-    return 0 if !rule
-
     # Count transactions from this action today
     start_of_day = Time.zone.now.beginning_of_day
 
     YakTransaction
       .where(yak_wallet: wallet)
       .where(transaction_type: "earn")
-      .where("description LIKE ?", "Earned from: #{rule.action_name}")
+      .where(source: "earning_#{action_key}")
       .where("created_at >= ?", start_of_day)
       .count
+  end
+
+  def self.earning_idempotency_key(
+    action_key,
+    event_id:,
+    related_post:,
+    related_topic:
+  )
+    event_id ||=
+      action_key == "topic_created" ? related_topic&.id : related_post&.id
+    return if event_id.blank?
+
+    "#{action_key}:#{event_id}"
+  end
+
+  def self.already_awarded?(wallet, action_key, idempotency_key)
+    return false if idempotency_key.blank?
+
+    wallet
+      .yak_transactions
+      .where(transaction_type: "earn", source: "earning_#{action_key}")
+      .where("metadata ->> 'idempotency_key' = ?", idempotency_key)
+      .exists?
   end
 
   # Check if user can earn from an action (for preview/UI purposes).

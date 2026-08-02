@@ -64,6 +64,7 @@ en:
       feature_disabled: "This feature is currently disabled"
       invalid_post: "Invalid post"
       invalid_target: "This feature cannot be applied to that target"
+      invalid_feature_data: "The selected feature options are invalid"
       not_allowed: "You cannot apply this feature to that content"
       already_applied: "This feature has already been applied to this post"
 

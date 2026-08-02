@@ -41,6 +41,87 @@ RSpec.describe YakFeatureService do
       expect(result[:new_balance]).to eq(75)
     end
 
+    it "rejects invalid or unexpected highlight options without charging" do
+      expect {
+        invalid_color =
+          described_class.apply_feature(
+            user,
+            "post_highlight",
+            related_post: post,
+            feature_data: {
+              color: "transparent"
+            }
+          )
+        unexpected_option =
+          described_class.apply_feature(
+            user,
+            "post_highlight",
+            related_post: post,
+            feature_data: {
+              admin: true
+            }
+          )
+
+        expect(invalid_color[:error]).to eq(
+          I18n.t("yaks.errors.invalid_feature_data")
+        )
+        expect(unexpected_option[:error]).to eq(
+          I18n.t("yaks.errors.invalid_feature_data")
+        )
+      }.not_to change { YakWallet.for_user(user).reload.balance }
+    end
+
+    it "rejects invalid flair values without charging" do
+      YakWallet.for_user(user).add_yaks(100, "test", "Flair balance")
+
+      expect {
+        result =
+          described_class.apply_feature(
+            user,
+            "custom_flair",
+            feature_data: {
+              icon: "user-secret",
+              bg_color: "not-a-color"
+            }
+          )
+
+        expect(result[:error]).to eq(I18n.t("yaks.errors.invalid_feature_data"))
+      }.not_to change { YakWallet.for_user(user).reload.balance }
+    end
+
+    it "requires a bounded custom title and stores its normalized value" do
+      YakWallet.for_user(user).add_yaks(100, "test", "Title balance")
+
+      expect {
+        invalid =
+          described_class.apply_feature(
+            user,
+            "custom_title",
+            feature_data: {
+              text: "x" * 51
+            }
+          )
+        expect(invalid[:error]).to eq(
+          I18n.t("yaks.errors.invalid_feature_data")
+        )
+      }.not_to change { YakWallet.for_user(user).reload.balance }
+
+      result =
+        described_class.apply_feature(
+          user,
+          "custom_title",
+          feature_data: {
+            text: "  Yak Wrangler  "
+          }
+        )
+
+      expect(result[:success]).to be true
+      expect(result[:feature_use].feature_data["text"]).to eq("Yak Wrangler")
+      expect(
+        user.reload.custom_fields.dig("yak_features", "title", "text")
+      ).to eq("Yak Wrangler")
+    end
+
     it "deducts cost from user balance" do
       expect {
         YakFeatureService.apply_feature(
