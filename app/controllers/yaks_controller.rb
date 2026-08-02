@@ -45,6 +45,25 @@ class YaksController < ApplicationController
            }
   end
 
+  # Returns the enabled feature catalog used by contextual spending controls.
+  def catalog
+    features = YakFeature.enabled.order(:category, :cost)
+
+    render json: {
+             features:
+               features.map do |feature|
+                 {
+                   key: feature.feature_key,
+                   name: feature.feature_name,
+                   description: feature.description,
+                   cost: feature.cost,
+                   category: feature.category,
+                   settings: feature.settings || {}
+                 }
+               end
+           }
+  end
+
   # Spends Yaks to purchase and apply a feature.
   #
   # @returns [JSON] Success status and updated balance or error message

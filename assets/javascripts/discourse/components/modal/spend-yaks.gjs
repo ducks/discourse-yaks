@@ -17,47 +17,8 @@ export default class SpendYaksModal extends Component {
   @tracked selectedFeature = null;
   @tracked selectedColor = "gold";
   @tracked processing = false;
-
-  postFeatures = [
-    {
-      id: "post_highlight",
-      name: i18n("yaks.features.post_highlight.name"),
-      description: i18n("yaks.features.post_highlight.description"),
-      cost: 25,
-      hasOptions: true,
-    },
-    {
-      id: "post_pin",
-      name: i18n("yaks.features.post_pin.name"),
-      description: i18n("yaks.features.post_pin.description"),
-      cost: 50,
-      hasOptions: false,
-    },
-    {
-      id: "post_boost",
-      name: i18n("yaks.features.post_boost.name"),
-      description: i18n("yaks.features.post_boost.description"),
-      cost: 30,
-      hasOptions: false,
-    },
-  ];
-
-  topicFeatures = [
-    {
-      id: "topic_pin",
-      name: i18n("yaks.features.topic_pin.name"),
-      description: i18n("yaks.features.topic_pin.description"),
-      cost: 100,
-      hasOptions: false,
-    },
-    {
-      id: "topic_boost",
-      name: i18n("yaks.features.topic_boost.name"),
-      description: i18n("yaks.features.topic_boost.description"),
-      cost: 150,
-      hasOptions: true,
-    },
-  ];
+  @tracked catalog = [];
+  @tracked loading = true;
 
   colors = [
     { id: "gold", name: "Gold" },
@@ -66,6 +27,22 @@ export default class SpendYaksModal extends Component {
     { id: "green", name: "Green" },
     { id: "purple", name: "Purple" },
   ];
+
+  constructor() {
+    super(...arguments);
+    this.loadCatalog();
+  }
+
+  async loadCatalog() {
+    try {
+      const result = await ajax("/yaks/catalog.json");
+      this.catalog = result.features;
+    } catch (error) {
+      popupAjaxError(error);
+    } finally {
+      this.loading = false;
+    }
+  }
 
   get isPostContext() {
     return !!this.args.model.post;
@@ -76,7 +53,8 @@ export default class SpendYaksModal extends Component {
   }
 
   get features() {
-    return this.isPostContext ? this.postFeatures : this.topicFeatures;
+    const category = this.isPostContext ? "post" : "topic";
+    return this.catalog.filter((feature) => feature.category === category);
   }
 
   get balance() {
@@ -84,7 +62,9 @@ export default class SpendYaksModal extends Component {
   }
 
   get selectedFeatureData() {
-    return this.features.find((f) => f.id === this.selectedFeature);
+    return this.features.find(
+      (feature) => feature.key === this.selectedFeature
+    );
   }
 
   get canAfford() {
@@ -171,20 +151,26 @@ export default class SpendYaksModal extends Component {
           <div class="features-list">
             <h3>{{i18n "yaks.modal.select_feature"}}</h3>
 
-            {{#each this.features as |feature|}}
-              <div
-                class="feature-option
-                  {{if (eq this.selectedFeature feature.id) 'selected'}}"
-                role="button"
-                {{on "click" (fn this.selectFeature feature.id)}}
-              >
-                <div class="feature-info">
-                  <div class="feature-name">{{feature.name}}</div>
-                  <div class="feature-description">{{feature.description}}</div>
+            {{#if this.loading}}
+              <div class="spinner"></div>
+            {{else}}
+              {{#each this.features as |feature|}}
+                <div
+                  class="feature-option
+                    {{if (eq this.selectedFeature feature.key) 'selected'}}"
+                  role="button"
+                  {{on "click" (fn this.selectFeature feature.key)}}
+                >
+                  <div class="feature-info">
+                    <div class="feature-name">{{feature.name}}</div>
+                    <div
+                      class="feature-description"
+                    >{{feature.description}}</div>
+                  </div>
+                  <div class="feature-cost">{{feature.cost}} Yaks</div>
                 </div>
-                <div class="feature-cost">{{feature.cost}} Yaks</div>
-              </div>
-            {{/each}}
+              {{/each}}
+            {{/if}}
           </div>
 
           {{#if

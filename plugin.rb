@@ -54,6 +54,7 @@ after_initialize do
 
   Discourse::Application.routes.append do
     get "/yaks" => "yaks#index"
+    get "/yaks/catalog" => "yaks#catalog"
     get "/yaks/purchase" => "yaks#index"
     post "/yaks/spend" => "yaks#spend"
 
