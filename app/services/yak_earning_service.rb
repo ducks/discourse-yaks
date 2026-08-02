@@ -9,16 +9,22 @@ class YakEarningService
   # @param related_topic [Topic, nil] Optional topic related to the earning
   # @returns [Boolean] True if Yaks were awarded, false if denied
   def self.award(user:, action_key:, related_post: nil, related_topic: nil)
+    return false unless SiteSetting.yaks_earning_enabled
+
     # Get the earning rule
     rule = YakEarningRule.get_rule(action_key)
     if !rule
-      Rails.logger.info("[Yaks] Award failed: Rule not found or disabled (#{action_key})")
+      Rails.logger.info(
+        "[Yaks] Award failed: Rule not found or disabled (#{action_key})"
+      )
       return false
     end
 
     # Check trust level requirement
     if user.trust_level < rule.min_trust_level
-      Rails.logger.info("[Yaks] Award failed: User TL#{user.trust_level} < required TL#{rule.min_trust_level}")
+      Rails.logger.info(
+        "[Yaks] Award failed: User TL#{user.trust_level} < required TL#{rule.min_trust_level}"
+      )
       return false
     end
 
@@ -26,37 +32,46 @@ class YakEarningService
     if rule.min_length > 0
       content = related_post&.raw || related_topic&.first_post&.raw || ""
       if content.length < rule.min_length
-        Rails.logger.info("[Yaks] Award failed: Content length #{content.length} < required #{rule.min_length}")
+        Rails.logger.info(
+          "[Yaks] Award failed: Content length #{content.length} < required #{rule.min_length}"
+        )
         return false
       end
     end
 
-    # Check daily cap
-    if rule.has_daily_cap?
-      earned_today = get_daily_earning_count(user, action_key)
-      if earned_today >= rule.daily_cap
-        Rails.logger.info("[Yaks] Award failed: Daily cap reached (#{earned_today}/#{rule.daily_cap})")
-        return false
-      end
-    end
-
-    # Award the Yaks
     wallet = YakWallet.find_or_create_by(user: user)
+    transaction = nil
 
-    YakTransaction.create!(
-      user: user,
-      yak_wallet: wallet,
-      amount: rule.amount,
-      transaction_type: "earn",
-      description: "Earned from: #{rule.action_name}",
-      related_post: related_post,
-      related_topic: related_topic,
-    )
+    wallet.with_lock do
+      if rule.has_daily_cap?
+        earned_today = get_daily_earning_count(user, action_key)
+        if earned_today >= rule.daily_cap
+          Rails.logger.info(
+            "[Yaks] Award failed: Daily cap reached (#{earned_today}/#{rule.daily_cap})"
+          )
+          return false
+        end
+      end
 
-    wallet.update!(balance: wallet.balance + rule.amount)
+      transaction =
+        wallet.add_yaks(
+          rule.amount,
+          "earning_#{action_key}",
+          "Earned from: #{rule.action_name}",
+          {
+            related_post_id: related_post&.id,
+            related_topic_id: related_topic&.id
+          }
+        )
+    end
+    return false unless transaction
 
     # Publish balance update to frontend
-    MessageBus.publish("/yak-balance/#{user.id}", { balance: wallet.balance }, user_ids: [user.id])
+    MessageBus.publish(
+      "/yak-balance/#{user.id}",
+      { balance: wallet.reload.balance },
+      user_ids: [user.id]
+    )
 
     true
   rescue => e
@@ -98,13 +113,20 @@ class YakEarningService
     return { can_earn: false, reason: "Rule not found or disabled" } if !rule
 
     if user.trust_level < rule.min_trust_level
-      return { can_earn: false, reason: "Trust level too low (need TL#{rule.min_trust_level})" }
+      return(
+        {
+          can_earn: false,
+          reason: "Trust level too low (need TL#{rule.min_trust_level})"
+        }
+      )
     end
 
     if rule.has_daily_cap?
       earned_today = get_daily_earning_count(user, action_key)
       if earned_today >= rule.daily_cap
-        return { can_earn: false, reason: "Daily cap reached (#{rule.daily_cap})" }
+        return(
+          { can_earn: false, reason: "Daily cap reached (#{rule.daily_cap})" }
+        )
       end
     end
 

@@ -25,6 +25,7 @@ class YakWallet < ActiveRecord::Base
     transaction do
       increment!(:balance, amount)
       increment!(:lifetime_earned, amount)
+      user.increment!(:yak_balance, amount)
 
       yak_transactions.create!(
         user_id: user_id,
@@ -33,6 +34,8 @@ class YakWallet < ActiveRecord::Base
         source: source,
         description: description,
         metadata: metadata,
+        related_post_id: metadata[:related_post_id],
+        related_topic_id: metadata[:related_topic_id]
       )
     end
   rescue ActiveRecord::RecordInvalid
@@ -47,11 +50,15 @@ class YakWallet < ActiveRecord::Base
   # @param options [Hash] Additional options including :related_post_id, :related_topic_id, :metadata
   # @returns [YakTransaction, nil] The created transaction or nil if insufficient balance or failed
   def spend_yaks(amount, feature_key, description, options = {})
-    return nil if amount <= 0 || balance < amount
+    return nil if amount <= 0
 
     transaction do
+      lock!
+      return nil if balance < amount
+
       decrement!(:balance, amount)
       increment!(:lifetime_spent, amount)
+      user.decrement!(:yak_balance, amount)
 
       yak_transactions.create!(
         user_id: user_id,
@@ -61,7 +68,7 @@ class YakWallet < ActiveRecord::Base
         description: description,
         metadata: options[:metadata] || {},
         related_post_id: options[:related_post_id],
-        related_topic_id: options[:related_topic_id],
+        related_topic_id: options[:related_topic_id]
       )
     end
   rescue ActiveRecord::RecordInvalid
@@ -82,6 +89,7 @@ class YakWallet < ActiveRecord::Base
     transaction do
       increment!(:balance, refund_amount)
       decrement!(:lifetime_spent, refund_amount)
+      user.increment!(:yak_balance, refund_amount)
 
       yak_transactions.create!(
         user_id: user_id,
@@ -89,7 +97,9 @@ class YakWallet < ActiveRecord::Base
         transaction_type: "refund",
         source: "refund_#{transaction.id}",
         description: reason,
-        metadata: { original_transaction_id: transaction.id },
+        metadata: {
+          original_transaction_id: transaction.id
+        }
       )
     end
   rescue ActiveRecord::RecordInvalid

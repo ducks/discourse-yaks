@@ -1,5 +1,5 @@
+import { getOwner } from "@ember/owner";
 import { withPluginApi } from "discourse/lib/plugin-api";
-import { getOwner } from "@ember/application";
 import SpendYaksModal from "../components/modal/spend-yaks";
 
 /**
@@ -12,7 +12,9 @@ import SpendYaksModal from "../components/modal/spend-yaks";
  */
 function initializeYakTopicActions(api) {
   const currentUser = api.getCurrentUser();
-  if (!currentUser) return;
+  if (!currentUser) {
+    return;
+  }
 
   api.registerTopicFooterButton({
     id: "yak-spend-topic",
@@ -39,7 +41,7 @@ function initializeYakTopicActions(api) {
       // Open the spend modal with topic context
       modal.show(SpendYaksModal, {
         model: {
-          topic: topic,
+          topic,
         },
       });
     },
@@ -74,6 +76,6 @@ function initializeYakTopicActions(api) {
 export default {
   name: "yak-topic-actions",
   initialize() {
-    withPluginApi("1.14.0", initializeYakTopicActions);
+    withPluginApi(initializeYakTopicActions);
   },
 };

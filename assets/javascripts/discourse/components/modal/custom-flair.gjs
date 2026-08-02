@@ -1,29 +1,26 @@
 import Component from "@glimmer/component";
-import { service } from "@ember/service";
-import { action } from "@ember/object";
 import { tracked } from "@glimmer/tracking";
-import { on } from "@ember/modifier";
 import { fn } from "@ember/helper";
-import { eq, or, not } from "truth-helpers";
+import { on } from "@ember/modifier";
+import { action } from "@ember/object";
+import { service } from "@ember/service";
+import { trustHTML } from "@ember/template";
 import DButton from "discourse/components/d-button";
 import DModal from "discourse/components/d-modal";
-import { i18n } from "discourse-i18n";
 import { ajax } from "discourse/lib/ajax";
 import { popupAjaxError } from "discourse/lib/ajax-error";
+import { eq, not, notEq, or } from "discourse/truth-helpers";
+import { i18n } from "discourse-i18n";
 import { YakFeatureQuantity } from "discourse/plugins/discourse-yaks/discourse/lib/yak-feature-quantity";
 
 export default class CustomFlairModal extends Component {
   @service currentUser;
+
   @tracked selectedIcon = "star";
   @tracked selectedBgColor = "FF0000";
   @tracked selectedColor = "FFFFFF";
   @tracked quantityCalc;
   @tracked processing = false;
-
-  constructor() {
-    super(...arguments);
-    this.quantityCalc = new YakFeatureQuantity(this.args.model.feature, 1);
-  }
 
   icons = [
     { id: "star", name: "Star" },
@@ -37,19 +34,66 @@ export default class CustomFlairModal extends Component {
   ];
 
   bgColors = [
-    { id: "FF0000", name: "Red", hex: "#FF0000" },
-    { id: "0000FF", name: "Blue", hex: "#0000FF" },
-    { id: "00FF00", name: "Green", hex: "#00FF00" },
-    { id: "FFD700", name: "Gold", hex: "#FFD700" },
-    { id: "9370DB", name: "Purple", hex: "#9370DB" },
-    { id: "FF1493", name: "Pink", hex: "#FF1493" },
+    {
+      id: "FF0000",
+      name: "Red",
+      style: trustHTML("background-color: #FF0000"),
+    },
+    {
+      id: "0000FF",
+      name: "Blue",
+      style: trustHTML("background-color: #0000FF"),
+    },
+    {
+      id: "00FF00",
+      name: "Green",
+      style: trustHTML("background-color: #00FF00"),
+    },
+    {
+      id: "FFD700",
+      name: "Gold",
+      style: trustHTML("background-color: #FFD700"),
+    },
+    {
+      id: "9370DB",
+      name: "Purple",
+      style: trustHTML("background-color: #9370DB"),
+    },
+    {
+      id: "FF1493",
+      name: "Pink",
+      style: trustHTML("background-color: #FF1493"),
+    },
   ];
 
   textColors = [
-    { id: "FFFFFF", name: "White", hex: "#FFFFFF" },
-    { id: "000000", name: "Black", hex: "#000000" },
-    { id: "FFD700", name: "Gold", hex: "#FFD700" },
+    {
+      id: "FFFFFF",
+      name: "White",
+      style: trustHTML("background-color: #FFFFFF"),
+    },
+    {
+      id: "000000",
+      name: "Black",
+      style: trustHTML("background-color: #000000"),
+    },
+    {
+      id: "FFD700",
+      name: "Gold",
+      style: trustHTML("background-color: #FFD700"),
+    },
   ];
+
+  constructor() {
+    super(...arguments);
+    this.quantityCalc = new YakFeatureQuantity(this.args.model.feature, 1);
+  }
+
+  get previewStyle() {
+    return trustHTML(
+      `background-color: #${this.selectedBgColor}; color: #${this.selectedColor}`
+    );
+  }
 
   get quantity() {
     return this.quantityCalc.quantity;
@@ -97,13 +141,13 @@ export default class CustomFlairModal extends Component {
   @action
   updateQuantity(event) {
     this.quantityCalc.quantity = event.target.value;
-    // Force Ember to notice the change
-    this.quantityCalc = this.quantityCalc;
   }
 
   @action
   async applyFlair() {
-    if (!this.canAfford) return;
+    if (!this.canAfford) {
+      return;
+    }
 
     this.processing = true;
 
@@ -166,26 +210,33 @@ export default class CustomFlairModal extends Component {
               {{on "input" this.updateQuantity}}
             />
             <div class="duration-display">
-              {{this.totalDuration}} days ({{this.quantity}} month{{#if (not (eq this.quantity 1))}}s{{/if}})
+              {{this.totalDuration}}
+              days ({{this.quantity}}
+              month{{#if (notEq this.quantity 1)}}s{{/if}})
             </div>
           </div>
 
           <div class="cost-info">
-            <strong>Cost:</strong> {{this.totalCost}} Yaks ({{this.baseCost}} × {{this.quantity}})
-            {{#if (not this.canAfford)}}
+            <strong>Cost:</strong>
+            {{this.totalCost}}
+            Yaks ({{this.baseCost}}
+            ×
+            {{this.quantity}})
+            {{#unless this.canAfford}}
               <div class="insufficient-balance">
                 Insufficient balance!
               </div>
-            {{/if}}
+            {{/unless}}
           </div>
 
           <div class="flair-preview">
             <h3>Preview</h3>
-            <div
-              class="flair-badge"
-              style="background-color: #{{this.selectedBgColor}}; color: #{{this.selectedColor}};"
-            >
-              <svg class="fa d-icon d-icon-{{this.selectedIcon}} svg-icon svg-string" xmlns="http://www.w3.org/2000/svg"><use href="#{{this.selectedIcon}}"></use></svg>
+            <div class="flair-badge" style={{this.previewStyle}}>
+              <svg
+                class="fa d-icon d-icon-{{this.selectedIcon}}
+                  svg-icon svg-string"
+                xmlns="http://www.w3.org/2000/svg"
+              ><use href="#{{this.selectedIcon}}"></use></svg>
             </div>
           </div>
 
@@ -194,14 +245,15 @@ export default class CustomFlairModal extends Component {
             <div class="icon-options">
               {{#each this.icons as |icon|}}
                 <div
-                  class="icon-option {{if
-                    (eq this.selectedIcon icon.id)
-                    'selected'
-                  }}"
+                  class="icon-option
+                    {{if (eq this.selectedIcon icon.id) 'selected'}}"
                   role="button"
                   {{on "click" (fn this.selectIcon icon.id)}}
                 >
-                  <svg class="fa d-icon d-icon-{{icon.id}} svg-icon svg-string" xmlns="http://www.w3.org/2000/svg"><use href="#{{icon.id}}"></use></svg>
+                  <svg
+                    class="fa d-icon d-icon-{{icon.id}} svg-icon svg-string"
+                    xmlns="http://www.w3.org/2000/svg"
+                  ><use href="#{{icon.id}}"></use></svg>
                   <span>{{icon.name}}</span>
                 </div>
               {{/each}}
@@ -213,11 +265,9 @@ export default class CustomFlairModal extends Component {
             <div class="color-options">
               {{#each this.bgColors as |color|}}
                 <div
-                  class="color-swatch {{if
-                    (eq this.selectedBgColor color.id)
-                    'selected'
-                  }}"
-                  style="background-color: {{color.hex}};"
+                  class="color-swatch
+                    {{if (eq this.selectedBgColor color.id) 'selected'}}"
+                  style={{color.style}}
                   role="button"
                   {{on "click" (fn this.selectBgColor color.id)}}
                   title={{color.name}}
@@ -231,11 +281,9 @@ export default class CustomFlairModal extends Component {
             <div class="color-options">
               {{#each this.textColors as |color|}}
                 <div
-                  class="color-swatch {{if
-                    (eq this.selectedColor color.id)
-                    'selected'
-                  }}"
-                  style="background-color: {{color.hex}};"
+                  class="color-swatch
+                    {{if (eq this.selectedColor color.id) 'selected'}}"
+                  style={{color.style}}
                   role="button"
                   {{on "click" (fn this.selectColor color.id)}}
                   title={{color.name}}
@@ -253,11 +301,7 @@ export default class CustomFlairModal extends Component {
           @disabled={{or (not this.canAfford) this.processing}}
           class="btn-primary"
         />
-        <DButton
-          @action={{@closeModal}}
-          @label="cancel"
-          class="btn-default"
-        />
+        <DButton @action={{@closeModal}} @label="cancel" class="btn-default" />
       </:footer>
     </DModal>
   </template>

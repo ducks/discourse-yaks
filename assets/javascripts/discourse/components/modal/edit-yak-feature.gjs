@@ -3,13 +3,13 @@ import { tracked } from "@glimmer/tracking";
 import { action } from "@ember/object";
 import { service } from "@ember/service";
 import DModal from "discourse/components/d-modal";
-import DButton from "discourse/components/d-button";
 import Form from "discourse/components/form";
 import { ajax } from "discourse/lib/ajax";
 import { popupAjaxError } from "discourse/lib/ajax-error";
 
 export default class EditYakFeatureModal extends Component {
   @service router;
+
   @tracked saving = false;
 
   get feature() {
@@ -69,11 +69,7 @@ export default class EditYakFeatureModal extends Component {
       class="edit-yak-feature-modal"
     >
       <:body>
-        <Form
-          @data={{this.formData}}
-          @onSubmit={{this.save}}
-          as |form|
-        >
+        <Form @data={{this.formData}} @onSubmit={{this.save}} as |form|>
           <form.Field
             @name="feature_name"
             @title="Feature Name"
@@ -83,11 +79,7 @@ export default class EditYakFeatureModal extends Component {
             <field.Input />
           </form.Field>
 
-          <form.Field
-            @name="description"
-            @title="Description"
-            as |field|
-          >
+          <form.Field @name="description" @title="Description" as |field|>
             <field.Textarea />
           </form.Field>
 

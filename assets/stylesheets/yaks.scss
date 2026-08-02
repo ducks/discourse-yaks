@@ -1,14 +1,14 @@
 :root {
   --yak-color-gold: #ffd700;
-  --yak-color-gold-bg: rgba(255, 215, 0, 0.1);
+  --yak-color-gold-bg: rgb(255, 215, 0, 0.1);
   --yak-color-blue: #4169e1;
-  --yak-color-blue-bg: rgba(65, 105, 225, 0.1);
+  --yak-color-blue-bg: rgb(65, 105, 225, 0.1);
   --yak-color-red: #dc143c;
-  --yak-color-red-bg: rgba(220, 20, 60, 0.1);
+  --yak-color-red-bg: rgb(220, 20, 60, 0.1);
   --yak-color-green: #32cd32;
-  --yak-color-green-bg: rgba(50, 205, 50, 0.1);
+  --yak-color-green-bg: rgb(50, 205, 50, 0.1);
   --yak-color-purple: #9370db;
-  --yak-color-purple-bg: rgba(147, 112, 219, 0.1);
+  --yak-color-purple-bg: rgb(147, 112, 219, 0.1);
 }
 
 .yak-highlighted-post {
@@ -341,7 +341,7 @@
       &:hover {
         border-color: var(--tertiary);
         transform: translateY(-4px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 12px rgb(0, 0, 0, 0.1);
       }
 
       .package-amount {
@@ -637,23 +637,23 @@
           }
 
           &[data-color="gold"] {
-            background: rgba(255, 215, 0, 0.2);
+            background: rgb(255, 215, 0, 0.2);
           }
 
           &[data-color="blue"] {
-            background: rgba(65, 105, 225, 0.2);
+            background: rgb(65, 105, 225, 0.2);
           }
 
           &[data-color="red"] {
-            background: rgba(220, 20, 60, 0.2);
+            background: rgb(220, 20, 60, 0.2);
           }
 
           &[data-color="green"] {
-            background: rgba(50, 205, 50, 0.2);
+            background: rgb(50, 205, 50, 0.2);
           }
 
           &[data-color="purple"] {
-            background: rgba(147, 112, 219, 0.2);
+            background: rgb(147, 112, 219, 0.2);
           }
         }
       }
@@ -661,7 +661,7 @@
 
     .insufficient-balance {
       padding: 12px;
-      background: rgba(220, 20, 60, 0.1);
+      background: rgb(220, 20, 60, 0.1);
       border: 1px solid #dc143c;
       border-radius: 6px;
       color: #dc143c;
@@ -789,7 +789,7 @@
 
     .insufficient-balance {
       padding: 12px;
-      background: rgba(220, 20, 60, 0.1);
+      background: rgb(220, 20, 60, 0.1);
       border: 1px solid #dc143c;
       border-radius: 6px;
       color: #dc143c;
@@ -805,7 +805,7 @@
 
   &:hover {
     border-color: var(--tertiary);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgb(0, 0, 0, 0.1);
     transform: translateY(-2px);
   }
 

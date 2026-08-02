@@ -18,10 +18,11 @@ module Jobs
     def execute(_args)
       return unless SiteSetting.yaks_enabled
 
-      expired_features = YakFeatureUse
-        .expired
-        .where(processed_at: nil)
-        .includes(:yak_feature, :related_post)
+      expired_features =
+        YakFeatureUse
+          .expired
+          .where(processed_at: nil)
+          .includes(:yak_feature, :related_post)
 
       expired_count = 0
       expired_features.find_each do |feature_use|
@@ -34,7 +35,9 @@ module Jobs
         end
       end
 
-      Rails.logger.info "[YakFeatures] Cleanup expired #{expired_count} feature(s)" if expired_count > 0
+      if expired_count > 0
+        Rails.logger.info "[YakFeatures] Cleanup expired #{expired_count} feature(s)"
+      end
     end
   end
 end

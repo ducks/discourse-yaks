@@ -4,16 +4,26 @@ require "rails_helper"
 
 RSpec.describe YakWallet do
   fab!(:user)
-  let(:wallet) { YakWallet.create!(user: user) }
+  let(:wallet) { YakWallet.for_user(user) }
 
   describe "validations" do
     it { should validate_presence_of(:user_id) }
-    it { should validate_numericality_of(:balance).is_greater_than_or_equal_to(0) }
-    it { should validate_numericality_of(:lifetime_earned).is_greater_than_or_equal_to(0) }
-    it { should validate_numericality_of(:lifetime_spent).is_greater_than_or_equal_to(0) }
+    it do
+      should validate_numericality_of(:balance).is_greater_than_or_equal_to(0)
+    end
+    it do
+      should validate_numericality_of(
+               :lifetime_earned
+             ).is_greater_than_or_equal_to(0)
+    end
+    it do
+      should validate_numericality_of(
+               :lifetime_spent
+             ).is_greater_than_or_equal_to(0)
+    end
 
     it "validates uniqueness of user_id" do
-      YakWallet.create!(user: user)
+      YakWallet.for_user(user)
       duplicate_wallet = YakWallet.new(user: user)
       expect(duplicate_wallet).not_to be_valid
     end
@@ -26,26 +36,27 @@ RSpec.describe YakWallet do
 
   describe ".for_user" do
     it "creates a new wallet if one doesn't exist" do
+      YakWallet.find_by(user: user)&.destroy!
       expect { YakWallet.for_user(user) }.to change { YakWallet.count }.by(1)
     end
 
     it "returns existing wallet if one exists" do
-      existing_wallet = YakWallet.create!(user: user)
+      existing_wallet = YakWallet.for_user(user)
       expect(YakWallet.for_user(user)).to eq(existing_wallet)
     end
   end
 
   describe "#add_yaks" do
     it "increases wallet balance" do
-      expect { wallet.add_yaks(100, "test", "Test credit") }.to change { wallet.reload.balance }.by(
-        100,
-      )
+      expect { wallet.add_yaks(100, "test", "Test credit") }.to change {
+        wallet.reload.balance
+      }.by(100)
     end
 
     it "increases lifetime_earned" do
-      expect {
-        wallet.add_yaks(100, "test", "Test credit")
-      }.to change { wallet.reload.lifetime_earned }.by(100)
+      expect { wallet.add_yaks(100, "test", "Test credit") }.to change {
+        wallet.reload.lifetime_earned
+      }.by(100)
     end
 
     it "updates user yak_balance" do
@@ -61,7 +72,13 @@ RSpec.describe YakWallet do
     end
 
     it "creates transaction with correct attributes" do
-      transaction = wallet.add_yaks(100, "quality_post", "Earned from great post", post_id: 123)
+      transaction =
+        wallet.add_yaks(
+          100,
+          "quality_post",
+          "Earned from great post",
+          post_id: 123
+        )
 
       expect(transaction.amount).to eq(100)
       expect(transaction.transaction_type).to eq("earn")
@@ -79,9 +96,15 @@ RSpec.describe YakWallet do
     end
 
     it "is atomic - all or nothing" do
-      allow(user).to receive(:increment!).and_raise(ActiveRecord::RecordInvalid.new)
+      transactions = wallet.yak_transactions
+      allow(wallet).to receive(:yak_transactions).and_return(transactions)
+      allow(transactions).to receive(:create!).and_raise(
+        ActiveRecord::RecordInvalid.new
+      )
 
-      expect { wallet.add_yaks(100, "test", "Test") }.not_to change { wallet.reload.balance }
+      expect { wallet.add_yaks(100, "test", "Test") }.not_to change {
+        wallet.reload.balance
+      }
     end
   end
 
@@ -114,8 +137,8 @@ RSpec.describe YakWallet do
           "Highlighted post",
           related_post_id: 456,
           metadata: {
-            color: "gold",
-          },
+            color: "gold"
+          }
         )
 
       expect(transaction.amount).to eq(-50)
@@ -142,12 +165,28 @@ RSpec.describe YakWallet do
       expect(wallet.reload.balance).to eq(100)
     end
 
-    it "is atomic - all or nothing" do
-      allow(user).to receive(:decrement!).and_raise(ActiveRecord::RecordInvalid.new)
+    it "reloads the locked balance before spending" do
+      stale_wallet = described_class.find(wallet.id)
 
-      expect {
-        wallet.spend_yaks(50, "post_highlight", "Test")
-      }.not_to change { wallet.reload.balance }
+      expect(
+        wallet.spend_yaks(75, "post_highlight", "First purchase")
+      ).to be_present
+      expect(
+        stale_wallet.spend_yaks(75, "post_highlight", "Second purchase")
+      ).to be_nil
+      expect(wallet.reload.balance).to eq(25)
+    end
+
+    it "is atomic - all or nothing" do
+      transactions = wallet.yak_transactions
+      allow(wallet).to receive(:yak_transactions).and_return(transactions)
+      allow(transactions).to receive(:create!).and_raise(
+        ActiveRecord::RecordInvalid.new
+      )
+
+      expect { wallet.spend_yaks(50, "post_highlight", "Test") }.not_to change {
+        wallet.reload.balance
+      }
     end
   end
 
@@ -158,30 +197,33 @@ RSpec.describe YakWallet do
     end
 
     it "increases wallet balance" do
-      expect { wallet.refund_transaction(spend_transaction, "Refund reason") }.to change {
-        wallet.reload.balance
-      }.by(50)
+      expect {
+        wallet.refund_transaction(spend_transaction, "Refund reason")
+      }.to change { wallet.reload.balance }.by(50)
     end
 
     it "decreases lifetime_spent" do
-      expect { wallet.refund_transaction(spend_transaction, "Refund reason") }.to change {
-        wallet.reload.lifetime_spent
-      }.by(-50)
+      expect {
+        wallet.refund_transaction(spend_transaction, "Refund reason")
+      }.to change { wallet.reload.lifetime_spent }.by(-50)
     end
 
     it "updates user yak_balance" do
-      expect { wallet.refund_transaction(spend_transaction, "Refund reason") }.to change {
-        user.reload.yak_balance
-      }.by(50)
+      expect {
+        wallet.refund_transaction(spend_transaction, "Refund reason")
+      }.to change { user.reload.yak_balance }.by(50)
     end
 
     it "creates a refund transaction record" do
-      refund_tx = wallet.refund_transaction(spend_transaction, "Feature removed")
+      refund_tx =
+        wallet.refund_transaction(spend_transaction, "Feature removed")
 
       expect(refund_tx.transaction_type).to eq("refund")
       expect(refund_tx.amount).to eq(50)
       expect(refund_tx.description).to eq("Feature removed")
-      expect(refund_tx.metadata["original_transaction_id"]).to eq(spend_transaction.id)
+      expect(refund_tx.metadata["original_transaction_id"]).to eq(
+        spend_transaction.id
+      )
     end
 
     it "returns nil if transaction doesn't belong to wallet" do

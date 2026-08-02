@@ -1,18 +1,21 @@
 import Component from "@glimmer/component";
 import { tracked } from "@glimmer/tracking";
-import { action } from "@ember/object";
 import { fn } from "@ember/helper";
+import { action } from "@ember/object";
 import { service } from "@ember/service";
-import { ajax } from "discourse/lib/ajax";
-import { i18n } from "discourse-i18n";
 import DButton from "discourse/components/d-button";
+import { ajax } from "discourse/lib/ajax";
+import { popupAjaxError } from "discourse/lib/ajax-error";
+import { i18n } from "discourse-i18n";
+import EditYakEarningRuleModal from "../../components/modal/edit-yak-earning-rule";
+import EditYakFeatureModal from "../../components/modal/edit-yak-feature";
 import EditYakPackageModal from "../../components/modal/edit-yak-package";
 import NewYakPackageModal from "../../components/modal/new-yak-package";
-import EditYakFeatureModal from "../../components/modal/edit-yak-feature";
-import EditYakEarningRuleModal from "../../components/modal/edit-yak-earning-rule";
 
 export default class YaksManagementTables extends Component {
   @service modal;
+  @service dialog;
+
   @tracked stats = null;
   @tracked features = [];
   @tracked packages = [];
@@ -36,7 +39,7 @@ export default class YaksManagementTables extends Component {
       this.packages = packagesData.packages;
       this.earningRules = earningRulesData.earning_rules;
     } catch (error) {
-      console.error("Error loading Yaks data:", error);
+      popupAjaxError(error);
     } finally {
       this.loading = false;
     }
@@ -61,19 +64,20 @@ export default class YaksManagementTables extends Component {
   }
 
   @action
-  async deletePackage(pkg) {
-    if (!confirm(`Delete package "${pkg.name}"?`)) {
-      return;
-    }
-
-    try {
-      await ajax(`/admin/plugins/yaks/packages/${pkg.id}`, {
-        type: "DELETE",
-      });
-      await this.loadData();
-    } catch (error) {
-      console.error("Error deleting package:", error);
-    }
+  deletePackage(pkg) {
+    this.dialog.yesNoConfirm({
+      message: `Delete package "${pkg.name}"?`,
+      didConfirm: async () => {
+        try {
+          await ajax(`/admin/plugins/yaks/packages/${pkg.id}`, {
+            type: "DELETE",
+          });
+          await this.loadData();
+        } catch (error) {
+          popupAjaxError(error);
+        }
+      },
+    });
   }
 
   @action
@@ -105,18 +109,20 @@ export default class YaksManagementTables extends Component {
       <div class="yaks-management-section">
         <h2>{{i18n "yaks.admin.stats.title"}}</h2>
         <table class="yaks-stats-table">
-          <tr>
-            <th>{{i18n "yaks.admin.stats.total_wallets"}}</th>
-            <td>{{this.stats.total_wallets}}</td>
-          </tr>
-          <tr>
-            <th>{{i18n "yaks.admin.stats.total_yaks"}}</th>
-            <td>{{this.stats.total_yaks_in_circulation}}</td>
-          </tr>
-          <tr>
-            <th>{{i18n "yaks.admin.stats.active_features"}}</th>
-            <td>{{this.stats.active_features}}</td>
-          </tr>
+          <tbody>
+            <tr>
+              <th>{{i18n "yaks.admin.stats.total_wallets"}}</th>
+              <td>{{this.stats.total_wallets}}</td>
+            </tr>
+            <tr>
+              <th>{{i18n "yaks.admin.stats.total_yaks"}}</th>
+              <td>{{this.stats.total_yaks_in_circulation}}</td>
+            </tr>
+            <tr>
+              <th>{{i18n "yaks.admin.stats.active_features"}}</th>
+              <td>{{this.stats.active_features}}</td>
+            </tr>
+          </tbody>
         </table>
 
         <h2>{{i18n "yaks.admin.packages.title"}}</h2>
@@ -146,7 +152,11 @@ export default class YaksManagementTables extends Component {
                 <td>{{pkg.yaks}}</td>
                 <td>{{pkg.bonus_yaks}}</td>
                 <td>{{pkg.total_yaks}}</td>
-                <td>{{if pkg.enabled (i18n "yaks.admin.yes") (i18n "yaks.admin.no")}}</td>
+                <td>{{if
+                    pkg.enabled
+                    (i18n "yaks.admin.yes")
+                    (i18n "yaks.admin.no")
+                  }}</td>
                 <td>
                   <DButton
                     @action={{fn this.editPackage pkg}}
@@ -187,9 +197,14 @@ export default class YaksManagementTables extends Component {
                   <small>{{feature.description}}</small>
                 </td>
                 <td>{{feature.cost}} {{i18n "yaks.admin.features.yaks"}}</td>
-                <td>{{feature.duration_hours}} {{i18n "yaks.admin.features.hours"}}</td>
+                <td>{{feature.duration_hours}}
+                  {{i18n "yaks.admin.features.hours"}}</td>
                 <td>{{feature.category}}</td>
-                <td>{{if feature.enabled (i18n "yaks.admin.yes") (i18n "yaks.admin.no")}}</td>
+                <td>{{if
+                    feature.enabled
+                    (i18n "yaks.admin.yes")
+                    (i18n "yaks.admin.no")
+                  }}</td>
                 <td>
                   <DButton
                     @action={{fn this.editFeature feature}}
@@ -226,9 +241,17 @@ export default class YaksManagementTables extends Component {
                 <td>{{rule.action_name}}</td>
                 <td>{{rule.description}}</td>
                 <td>{{rule.amount}} {{i18n "yaks.currency"}}</td>
-                <td>{{if rule.daily_cap rule.daily_cap (i18n "yaks.admin.earning_rules.no_cap")}}</td>
+                <td>{{if
+                    rule.daily_cap
+                    rule.daily_cap
+                    (i18n "yaks.admin.earning_rules.no_cap")
+                  }}</td>
                 <td>TL{{rule.min_trust_level}}</td>
-                <td>{{if rule.enabled (i18n "yaks.admin.yes") (i18n "yaks.admin.no")}}</td>
+                <td>{{if
+                    rule.enabled
+                    (i18n "yaks.admin.yes")
+                    (i18n "yaks.admin.no")
+                  }}</td>
                 <td>
                   <DButton
                     @action={{fn this.editEarningRule rule}}

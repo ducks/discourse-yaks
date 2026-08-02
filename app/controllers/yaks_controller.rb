@@ -4,6 +4,7 @@
 #
 # @class YaksController
 class YaksController < ApplicationController
+  requires_plugin DiscourseYaks::PLUGIN_NAME
   requires_login
 
   # Displays user's wallet, transaction history, and available features.
@@ -26,7 +27,7 @@ class YaksController < ApplicationController
                    type: tx.transaction_type,
                    source: tx.source,
                    description: tx.description,
-                   created_at: tx.created_at,
+                   created_at: tx.created_at
                  }
                end,
              features:
@@ -38,9 +39,9 @@ class YaksController < ApplicationController
                    description: f.description,
                    cost: f.cost,
                    category: f.category,
-                   affordable: f.affordable_by?(current_user),
+                   affordable: f.affordable_by?(current_user)
                  }
-               end,
+               end
            }
   end
 
@@ -58,13 +59,14 @@ class YaksController < ApplicationController
     topic = Topic.find_by(id: topic_id) if topic_id
 
     # Convert feature_data to hash with symbol keys
-    feature_data_hash = if feature_data.respond_to?(:to_unsafe_h)
-      feature_data.to_unsafe_h.symbolize_keys
-    elsif feature_data.is_a?(Hash)
-      feature_data.symbolize_keys
-    else
-      {}
-    end
+    feature_data_hash =
+      if feature_data.respond_to?(:to_unsafe_h)
+        feature_data.to_unsafe_h.symbolize_keys
+      elsif feature_data.is_a?(Hash)
+        feature_data.symbolize_keys
+      else
+        {}
+      end
 
     result =
       YakFeatureService.apply_feature(
@@ -73,40 +75,21 @@ class YaksController < ApplicationController
         related_post: post,
         related_topic: topic,
         feature_data: feature_data_hash,
-        quantity: quantity,
+        quantity: quantity
       )
 
     if result[:success]
       render json: {
                success: true,
                new_balance: result[:new_balance],
-               feature_use_id: result[:feature_use].id,
+               feature_use_id: result[:feature_use].id
              }
     else
-      render json: { success: false, error: result[:error] }, status: :unprocessable_entity
-    end
-  end
-
-  # Handles Stripe payment (stubbed for now).
-  #
-  # @returns [JSON] Success status
-  def purchase
-    amount_usd = params.require(:amount).to_f
-    yaks_to_add = (amount_usd * SiteSetting.yaks_dollar_to_yak_rate).to_i
-
-    wallet = YakWallet.for_user(current_user)
-    transaction =
-      wallet.add_yaks(
-        yaks_to_add,
-        "stripe_purchase_stub",
-        "Purchased #{yaks_to_add} Yaks for $#{amount_usd}",
-        { amount_usd: amount_usd, payment_method: "stub" },
-      )
-
-    if transaction
-      render json: { success: true, new_balance: current_user.yak_balance, yaks_added: yaks_to_add }
-    else
-      render json: { success: false, error: "Purchase failed" }, status: :unprocessable_entity
+      render json: {
+               success: false,
+               error: result[:error]
+             },
+             status: :unprocessable_entity
     end
   end
 end
