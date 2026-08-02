@@ -290,12 +290,12 @@ GPL v2 (same as Discourse)
 
 ## Support
 
-- Report issues on GitHub
+- [Report issues on GitHub](https://github.com/ducks/discourse-yaks/issues)
 - Community discussion on Meta Discourse
 - Documentation at discourse.org
 
 ---
 
-**Version**: 20251019
+**Version**: 20260802
 **Status**: Alpha - Backend and frontend complete. Five features working end-to-end with expiration system. Earning system operational. Admin UI fully functional.
 **Discourse Version**: Tested with Discourse 3.4+
