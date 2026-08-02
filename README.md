@@ -1,13 +1,15 @@
 # Discourse Yaks - Virtual Currency System
 
-A virtual currency system for Discourse forums that allows users to earn and spend "Yaks" on premium features. The name is a playful pun on "yakking" (talking/chatting) and "yak shaving" (developer rabbit holes).
+A non-monetary community currency system for Discourse forums that allows users to earn and spend "Yaks" on forum perks. The name is a playful pun on "yakking" (talking/chatting) and "yak shaving" (developer rabbit holes).
+
+Yaks cannot be purchased with real money. They are earned through community participation or granted by staff.
 
 ## Features
 
 ### Core Wallet System
 - **Balance Tracking**: Each user has a wallet with current balance and lifetime statistics
 - **Transaction History**: Complete audit trail of all Yak transactions
-- **Multiple Transaction Types**: Purchase, earn, spend, refund, and admin grants
+- **Multiple Transaction Types**: Earn, spend, refund, and admin grants
 
 ### Available Features
 
@@ -30,7 +32,6 @@ A virtual currency system for Discourse forums that allows users to earn and spe
 - View transaction history with filtering
 - Create and manage custom features
 - Edit earning rules (amount, daily caps, trust level requirements)
-- Manage purchase packages
 - Full audit logging
 
 ## Installation
@@ -61,7 +62,6 @@ hooks:
 ### Site Settings
 
 - **yaks_enabled** - Enable/disable the Yaks currency system
-- **yaks_dollar_to_yak_rate** - Exchange rate (default: 20 Yaks per $1)
 - **yaks_earning_enabled** - Allow users to earn Yaks through contributions
 - **yaks_min_likes_for_reward** - Minimum likes needed to earn Yaks (default: 5)
 - **yaks_max_reward_per_post** - Maximum Yaks per post (default: 50)
@@ -100,14 +100,7 @@ All earning rules are configurable by admins:
 - Minimum trust level requirements
 - Enable/disable specific rules
 
-Users can also receive Yaks through:
-- Admin grants
-- Purchases (stubbed endpoint, awaiting Stripe integration)
-
-#### Purchasing Yaks
-- Visit `/yaks/purchase` to see available packages
-- Payment integration stubbed for now (awaiting Stripe)
-- Packages configurable via site settings
+Users can also receive Yaks through admin grants. There is no real-money purchase flow.
 
 ### For Admins
 
@@ -146,7 +139,6 @@ POST /admin/yaks/features
 ### User Endpoints
 - `GET /yaks` - View wallet and available features
 - `POST /yaks/spend` - Purchase and apply a feature
-- `POST /yaks/purchase` - Buy Yaks (stubbed)
 
 ### Admin Endpoints
 - `GET /admin/yaks` - System statistics
@@ -231,7 +223,6 @@ plugins/discourse-yaks/
 - Spend Yaks button in post actions menu and topic footer
 - Modular feature selection modal with quantity support
 - Full wallet page with stats and transaction history
-- Purchase flow with configurable packages
 - Post highlighting with 5 color options
 - Topic pinning and boosting UI
 - Custom title and flair modals with live preview
@@ -240,7 +231,6 @@ plugins/discourse-yaks/
 
 **Admin UI:**
 - System statistics dashboard
-- Manage purchase packages
 - Edit features
 - Edit earning rules
 - Transaction history with filters
@@ -262,10 +252,9 @@ plugins/discourse-yaks/
    - Rate limiting on endpoints
    - Security audit
 
-3. **Payment Integration**
-   - Replace stub with real Stripe integration
-   - Webhook handlers
-   - Refund processing
+3. **Economy Balancing**
+   - Tune earning rules and feature costs
+   - Add additional anti-abuse controls
 
 4. **Testing**
    - Controller request specs

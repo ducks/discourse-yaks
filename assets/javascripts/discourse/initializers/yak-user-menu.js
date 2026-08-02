@@ -24,7 +24,7 @@ export default {
 
       // Add balance display to user menu profile tab
       api.addQuickAccessProfileItem({
-        icon: "dollar-sign",
+        icon: "coins",
         href: "/yaks",
         get content() {
           return i18n("yaks.user_menu.balance", {

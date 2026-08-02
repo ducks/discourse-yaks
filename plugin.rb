@@ -13,8 +13,6 @@ add_admin_route "yaks.admin.title", "yaks", use_new_show_route: true
 register_asset "stylesheets/yaks.scss"
 
 register_svg_icon "gift"
-register_svg_icon "dollar-sign"
-register_svg_icon "shopping-cart"
 register_svg_icon "coins"
 register_svg_icon "thumbtack"
 register_svg_icon "pencil"
@@ -43,7 +41,6 @@ after_initialize do
   require_relative "app/models/yak_transaction"
   require_relative "app/models/yak_feature"
   require_relative "app/models/yak_feature_use"
-  require_relative "app/models/yak_package"
   require_relative "app/services/yak_feature_service"
   require_relative "app/controllers/yaks_controller"
   require_relative "app/controllers/admin/yaks_controller"
@@ -55,7 +52,6 @@ after_initialize do
   Discourse::Application.routes.append do
     get "/yaks" => "yaks#index"
     get "/yaks/catalog" => "yaks#catalog"
-    get "/yaks/purchase" => "yaks#index"
     post "/yaks/spend" => "yaks#spend"
 
     get "/admin/plugins/yaks/stats" => "admin/yaks#stats",
@@ -70,14 +66,6 @@ after_initialize do
          :constraints => StaffConstraint.new
     put "/admin/plugins/yaks/features/:id" => "admin/yaks#update_feature",
         :constraints => StaffConstraint.new
-    get "/admin/plugins/yaks/packages" => "admin/yaks#packages",
-        :constraints => StaffConstraint.new
-    post "/admin/plugins/yaks/packages" => "admin/yaks#create_package",
-         :constraints => StaffConstraint.new
-    put "/admin/plugins/yaks/packages/:id" => "admin/yaks#update_package",
-        :constraints => StaffConstraint.new
-    delete "/admin/plugins/yaks/packages/:id" => "admin/yaks#delete_package",
-           :constraints => StaffConstraint.new
     get "/admin/plugins/yaks/earning_rules" => "admin/yaks#earning_rules",
         :constraints => StaffConstraint.new
     put "/admin/plugins/yaks/earning_rules/:id" =>
