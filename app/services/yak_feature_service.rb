@@ -4,6 +4,8 @@
 #
 # @class YakFeatureService
 class YakFeatureService
+  TOPIC_PIN_FEATURE_KEYS = %w[topic_pin topic_boost].freeze
+  PREVIOUS_PIN_STATE_KEY = "_yak_previous_pin_state"
   # Applies a feature to a post or user profile.
   #
   # @param user [User] The user purchasing the feature
@@ -63,6 +65,7 @@ class YakFeatureService
     transaction = nil
     feature_use = nil
     failure_error = I18n.t("yaks.errors.insufficient_balance")
+    effect_data = feature_data.to_h.with_indifferent_access
 
     YakWallet.transaction do
       lock_feature_target!(
@@ -83,6 +86,10 @@ class YakFeatureService
         raise ActiveRecord::Rollback
       end
 
+      if TOPIC_PIN_FEATURE_KEYS.include?(feature.feature_key)
+        effect_data[PREVIOUS_PIN_STATE_KEY] = topic_pin_state(related_topic)
+      end
+
       transaction =
         wallet.spend_yaks(
           total_cost,
@@ -90,7 +97,7 @@ class YakFeatureService
           "Applied #{feature.feature_name} (×#{quantity})",
           related_post_id: related_post&.id,
           related_topic_id: topic&.id,
-          metadata: feature_data.merge(quantity: quantity)
+          metadata: effect_data.merge(quantity: quantity)
         )
 
       raise ActiveRecord::Rollback unless transaction
@@ -103,7 +110,7 @@ class YakFeatureService
           related_post: related_post,
           related_topic: topic,
           expires_at: expires_at,
-          feature_data: feature_data
+          feature_data: effect_data
         )
 
       apply_feature_effects(
@@ -111,7 +118,7 @@ class YakFeatureService
         user: user,
         related_post: related_post,
         related_topic: topic,
-        feature_data: feature_data,
+        feature_data: effect_data,
         expires_at: expires_at
       )
     end
@@ -159,8 +166,17 @@ class YakFeatureService
   def self.can_apply_to_topic?(user, topic, feature_key)
     return false unless topic
 
-    existing_uses =
-      YakFeatureUse.active.for_topic(topic.id).by_feature(feature_key)
+    existing_uses = YakFeatureUse.active.for_topic(topic.id)
+    if TOPIC_PIN_FEATURE_KEYS.include?(feature_key)
+      existing_uses =
+        existing_uses.joins(:yak_feature).where(
+          yak_features: {
+            feature_key: TOPIC_PIN_FEATURE_KEYS
+          }
+        )
+    else
+      existing_uses = existing_uses.by_feature(feature_key)
+    end
 
     existing_uses.empty?
   end
@@ -262,6 +278,14 @@ class YakFeatureService
     end
   end
 
+  def self.topic_pin_state(topic)
+    {
+      "pinned" => topic.pinned_at.present?,
+      "globally" => topic.pinned_globally,
+      "until" => topic.pinned_until&.iso8601
+    }
+  end
+
   # Applies visual and functional effects of a feature.
   #
   # @param feature [YakFeature] The feature being applied
@@ -340,6 +364,10 @@ class YakFeatureService
           false,
           (expires_at || 24.hours.from_now).to_s
         )
+        current_features = related_topic.custom_fields["yak_features"] || {}
+        current_features["pinned"] = { enabled: true }
+        related_topic.custom_fields["yak_features"] = current_features
+        related_topic.save_custom_fields
       when "topic_boost"
         related_topic.update_pinned(
           true,
@@ -406,9 +434,13 @@ class YakFeatureService
 
       case feature_key
       when "topic_pin"
-        topic.update_pinned(false) if topic.pinned_at.present?
+        restore_topic_pin_state(topic, feature_use)
+        current_features = topic.custom_fields["yak_features"] || {}
+        current_features.delete("pinned")
+        topic.custom_fields["yak_features"] = current_features
+        topic.save_custom_fields
       when "topic_boost"
-        topic.update_pinned(false) if topic.pinned_at.present?
+        restore_topic_pin_state(topic, feature_use)
 
         # Remove visual highlight
         current_features = topic.custom_fields["yak_features"] || {}
@@ -417,5 +449,30 @@ class YakFeatureService
         topic.save_custom_fields
       end
     end
+  end
+
+  def self.restore_topic_pin_state(topic, feature_use)
+    return unless yak_pin_state_unchanged?(topic, feature_use)
+
+    previous = feature_use.feature_data&.dig(PREVIOUS_PIN_STATE_KEY) || {}
+    previous_until = Time.zone.parse(previous["until"]) if previous["until"]
+
+    if previous["pinned"] && (previous_until.nil? || previous_until.future?)
+      topic.update_pinned(
+        true,
+        previous["globally"] == true,
+        previous_until&.to_s
+      )
+    else
+      topic.update_pinned(false)
+    end
+  end
+
+  def self.yak_pin_state_unchanged?(topic, feature_use)
+    return false if topic.pinned_at.blank? || feature_use.expires_at.blank?
+
+    expected_global = feature_use.yak_feature.feature_key == "topic_boost"
+    topic.pinned_globally == expected_global && topic.pinned_until.present? &&
+      (topic.pinned_until - feature_use.expires_at).abs < 2.seconds
   end
 end
