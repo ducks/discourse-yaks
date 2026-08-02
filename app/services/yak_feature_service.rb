@@ -21,7 +21,7 @@ class YakFeatureService
     feature_data: {},
     quantity: 1
   )
-    feature = YakFeature.enabled.find_by(feature_key: feature_key)
+    feature = YakFeature.available.find_by(feature_key: feature_key)
     unless feature
       return { success: false, error: I18n.t("yaks.errors.feature_not_found") }
     end

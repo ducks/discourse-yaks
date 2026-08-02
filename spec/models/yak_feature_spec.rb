@@ -86,6 +86,18 @@ RSpec.describe YakFeature do
       end
     end
 
+    describe ".available" do
+      it "returns only implemented, enabled features" do
+        implemented = YakFeature.find_by!(feature_key: "post_highlight")
+        unfinished = YakFeature.find_by!(feature_key: "post_pin")
+        implemented.update!(enabled: true)
+        unfinished.update!(enabled: true)
+
+        expect(YakFeature.available).to include(implemented)
+        expect(YakFeature.available).not_to include(unfinished, enabled_post)
+      end
+    end
+
     describe ".by_category" do
       it "filters by category" do
         expect(YakFeature.by_category("post")).to include(
@@ -145,6 +157,7 @@ RSpec.describe YakFeature do
       expect(feature).to be_present
       expect(feature.cost).to eq(50)
       expect(feature.settings["duration_hours"]).to eq(24)
+      expect(feature.enabled).to be false
     end
 
     it "creates custom_flair feature" do
@@ -164,6 +177,7 @@ RSpec.describe YakFeature do
       expect(feature).to be_present
       expect(feature.cost).to eq(30)
       expect(feature.settings["duration_hours"]).to eq(72)
+      expect(feature.enabled).to be false
     end
 
     it "does not create duplicates if called multiple times" do

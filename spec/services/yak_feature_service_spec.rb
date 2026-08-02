@@ -13,6 +13,16 @@ RSpec.describe YakFeatureService do
   end
 
   describe ".apply_feature" do
+    it "does not sell unfinished post features" do
+      expect {
+        result =
+          YakFeatureService.apply_feature(user, "post_pin", related_post: post)
+
+        expect(result[:success]).to be false
+        expect(result[:error]).to eq(I18n.t("yaks.errors.feature_not_found"))
+      }.not_to change { YakWallet.for_user(user).reload.balance }
+    end
+
     it "successfully applies a feature" do
       result =
         YakFeatureService.apply_feature(
@@ -163,8 +173,17 @@ RSpec.describe YakFeatureService do
     end
 
     it "sets expiration for time-limited features" do
+      YakFeature.find_by(feature_key: "post_highlight").update!(
+        settings: {
+          duration_hours: 24
+        }
+      )
       result =
-        YakFeatureService.apply_feature(user, "post_pin", related_post: post)
+        YakFeatureService.apply_feature(
+          user,
+          "post_highlight",
+          related_post: post
+        )
 
       expect(result[:feature_use].expires_at).to be_present
       expect(result[:feature_use].expires_at).to be_within(1.minute).of(
@@ -185,9 +204,18 @@ RSpec.describe YakFeatureService do
 
     it "schedules expiration job for time-limited features" do
       freeze_time
+      YakFeature.find_by(feature_key: "post_highlight").update!(
+        settings: {
+          duration_hours: 24
+        }
+      )
 
       expect_enqueued_with(job: :expire_yak_feature, at: 24.hours.from_now) do
-        YakFeatureService.apply_feature(user, "post_pin", related_post: post)
+        YakFeatureService.apply_feature(
+          user,
+          "post_highlight",
+          related_post: post
+        )
       end
     end
 

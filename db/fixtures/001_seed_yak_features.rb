@@ -19,7 +19,7 @@ YakFeature.seed do |f|
   f.description = "Pin your post to the top of a topic for 24 hours"
   f.cost = 50
   f.category = "post"
-  f.enabled = true
+  f.enabled = false
   f.settings = { duration_hours: 24 }
 end
 
@@ -30,6 +30,6 @@ YakFeature.seed do |f|
   f.description = "Boost your post in feeds and search for 72 hours"
   f.cost = 25
   f.category = "post"
-  f.enabled = true
+  f.enabled = false
   f.settings = { duration_hours: 72 }
 end

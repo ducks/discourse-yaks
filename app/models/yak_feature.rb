@@ -4,6 +4,14 @@
 #
 # @class YakFeature
 class YakFeature < ActiveRecord::Base
+  IMPLEMENTED_FEATURE_KEYS = %w[
+    post_highlight
+    topic_pin
+    topic_boost
+    custom_flair
+    custom_title
+  ].freeze
+
   has_many :yak_feature_uses, dependent: :destroy
 
   validates :feature_key, presence: true, uniqueness: true
@@ -12,6 +20,7 @@ class YakFeature < ActiveRecord::Base
   validates :category, inclusion: { in: %w[post user topic] }, allow_nil: true
 
   scope :enabled, -> { where(enabled: true) }
+  scope :available, -> { enabled.where(feature_key: IMPLEMENTED_FEATURE_KEYS) }
   scope :by_category, ->(cat) { where(category: cat) }
 
   # Seeds default features defined in the specification.
@@ -39,7 +48,8 @@ class YakFeature < ActiveRecord::Base
         category: "post",
         settings: {
           duration_hours: 24
-        }
+        },
+        enabled: false
       },
       {
         feature_key: "custom_flair",
@@ -62,7 +72,8 @@ class YakFeature < ActiveRecord::Base
         category: "post",
         settings: {
           duration_hours: 72
-        }
+        },
+        enabled: false
       }
     ]
 
