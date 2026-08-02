@@ -5,7 +5,7 @@
         <h1 class="d-page-header__title">Yak Management</h1>
       </div>
       <p class="d-page-header__description">
-        Manage your virtual currency system. Configure purchase packages and premium features.
+        Manage your community currency, earning rules, and member perks.
       </p>
     </div>
 
@@ -28,77 +28,6 @@
                 <div class="stat-label">Active Features</div>
               </div>
             </div>
-          </div>
-
-          <div class="admin-yaks-packages">
-            <div class="admin-section-header">
-              <h3>Purchase Packages</h3>
-              <button
-                type="button"
-                class="btn btn-primary"
-                {{on "click" this.addPackage}}
-              >
-                Add Package
-              </button>
-            </div>
-            <table class="yak-packages-table">
-              <thead>
-                <tr>
-                  <th>Package Name</th>
-                  <th>Price (USD)</th>
-                  <th>Base Yaks</th>
-                  <th>Bonus Yaks</th>
-                  <th>Total Yaks</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {{#each this.model.packages as |package|}}
-                  <tr>
-                    <td>
-                      <strong>{{package.name}}</strong>
-                      {{#if package.description}}
-                        <br><small>{{package.description}}</small>
-                      {{/if}}
-                    </td>
-                    <td>${{package.price_usd}}</td>
-                    <td>{{package.yaks}} Yaks</td>
-                    <td>
-                      {{#if package.bonus_yaks}}
-                        +{{package.bonus_yaks}} Yaks
-                      {{else}}
-                        <span style="color: var(--primary-medium);">No bonus</span>
-                      {{/if}}
-                    </td>
-                    <td><strong>{{package.total_yaks}} Yaks</strong></td>
-                    <td>
-                      {{#if package.enabled}}
-                        <span class="enabled-badge">✓ Enabled</span>
-                      {{else}}
-                        <span class="disabled-badge">✗ Disabled</span>
-                      {{/if}}
-                    </td>
-                    <td>
-                      <button
-                        type="button"
-                        class="btn btn-small"
-                        {{on "click" (fn this.editPackage package)}}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        class="btn btn-small btn-danger"
-                        {{on "click" (fn this.deletePackage package)}}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                {{/each}}
-              </tbody>
-            </table>
           </div>
 
           <div class="admin-yaks-features">

@@ -24,13 +24,7 @@ en:
         balance: "Current Balance"
         lifetime_earned: "Lifetime Earned"
         lifetime_spent: "Lifetime Spent"
-        purchase_yaks: "Purchase Yaks"
         transaction_history: "Transaction History"
-
-      purchase:
-        buy_now: "Buy Now"
-        back_to_wallet: "Back to Wallet"
-        unavailable: "Yak purchases are currently unavailable."
 
       features:
         title: "Available Features"
@@ -80,24 +74,15 @@ en:
         no: "No"
         edit: "Edit"
         delete: "Delete"
+        actions: "Actions"
         management:
           title: "Management"
-          description: "Manage packages, features, and system statistics"
+          description: "Manage features, earning rules, and system statistics"
         stats:
           title: "System Statistics"
           total_wallets: "Total Wallets"
           total_yaks: "Total Yaks in Circulation"
           active_features: "Active Features"
-        packages:
-          title: "Purchase Packages"
-          add: "Add Package"
-          name: "Name"
-          price: "Price"
-          base_yaks: "Base Yaks"
-          bonus_yaks: "Bonus Yaks"
-          total: "Total"
-          enabled: "Enabled"
-          actions: "Actions"
         features:
           title: "Manage Features"
           feature: "Feature"

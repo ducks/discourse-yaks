@@ -113,7 +113,7 @@ export default class EditYakFeatureModal extends Component {
           <form.Field
             @name="enabled"
             @title="Enabled"
-            @description="Make this feature available for purchase"
+            @description="Make this feature available to members"
             as |field|
           >
             <field.Checkbox />

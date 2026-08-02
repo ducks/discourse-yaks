@@ -1,7 +1,6 @@
 en:
   site_settings:
     yaks_enabled: "Enable the Yaks currency system"
-    yaks_dollar_to_yak_rate: "Exchange rate: how many Yaks per dollar"
     yaks_earning_enabled: "Allow users to earn Yaks through quality contributions"
     yaks_min_likes_for_reward: "Minimum likes required for a post to earn Yaks"
     yaks_max_reward_per_post: "Maximum Yaks that can be earned from a single post"
@@ -15,7 +14,6 @@ en:
       balance: "Current Balance"
       lifetime_earned: "Lifetime Earned"
       lifetime_spent: "Lifetime Spent"
-      purchase_yaks: "Purchase Yaks"
       transaction_history: "Transaction History"
 
     features:
@@ -77,6 +75,7 @@ en:
       no: "No"
       edit: "Edit"
       delete: "Delete"
+      actions: "Actions"
       management:
         title: "Management"
-        description: "Manage packages, features, and system statistics"
+        description: "Manage features, earning rules, and system statistics"
