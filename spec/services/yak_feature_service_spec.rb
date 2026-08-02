@@ -5,6 +5,7 @@ require "rails_helper"
 RSpec.describe YakFeatureService do
   fab!(:user)
   fab!(:post) { Fabricate(:post, user: user) }
+  fab!(:topic) { Fabricate(:topic, user: user) }
 
   before do
     SiteSetting.yaks_enabled = true
@@ -291,6 +292,69 @@ RSpec.describe YakFeatureService do
       expect(
         YakFeatureService.can_apply_to_post?(user, nil, "post_highlight")
       ).to be false
+    end
+  end
+
+  describe "topic pin safety" do
+    it "prevents overlapping Yak topic pin variants" do
+      first_result =
+        described_class.apply_feature(user, "topic_pin", related_topic: topic)
+      YakWallet.for_user(user).add_yaks(200, "test", "Replenish balance")
+
+      expect(first_result[:success]).to be true
+      expect(
+        described_class.can_apply_to_topic?(user, topic, "topic_boost")
+      ).to be false
+
+      expect {
+        second_result =
+          described_class.apply_feature(
+            user,
+            "topic_boost",
+            related_topic: topic
+          )
+        expect(second_result[:success]).to be false
+        expect(second_result[:error]).to eq(
+          I18n.t("yaks.errors.already_applied")
+        )
+      }.not_to change { YakWallet.for_user(user).reload.balance }
+    end
+
+    it "restores a native category pin after a Yak boost expires" do
+      topic.update_pinned(true, false)
+      YakWallet.for_user(user).add_yaks(100, "test", "Boost balance")
+
+      result =
+        described_class.apply_feature(user, "topic_boost", related_topic: topic)
+      expect(result[:success]).to be true
+      expect(topic.reload.pinned_globally).to be true
+
+      described_class.remove_feature_effects(result[:feature_use])
+
+      expect(topic.reload.pinned_at).to be_present
+      expect(topic.pinned_globally).to be false
+      expect(topic.pinned_until).to be_nil
+    end
+
+    it "unpins a topic that had no native pin before purchase" do
+      result =
+        described_class.apply_feature(user, "topic_pin", related_topic: topic)
+      expect(topic.reload.pinned_at).to be_present
+
+      described_class.remove_feature_effects(result[:feature_use])
+
+      expect(topic.reload.pinned_at).to be_nil
+    end
+
+    it "does not overwrite a pin changed while the Yak feature was active" do
+      result =
+        described_class.apply_feature(user, "topic_pin", related_topic: topic)
+      topic.update_pinned(true, false)
+
+      described_class.remove_feature_effects(result[:feature_use])
+
+      expect(topic.reload.pinned_at).to be_present
+      expect(topic.pinned_until).to be_nil
     end
   end
 
