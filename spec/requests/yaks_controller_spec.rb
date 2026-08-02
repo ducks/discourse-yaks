@@ -11,16 +11,18 @@ RSpec.describe YaksController do
   end
 
   describe "GET /yaks/catalog.json" do
-    fab!(:enabled_feature) do
-      Fabricate(
-        :yak_feature,
-        feature_key: "server_priced_feature",
-        feature_name: "Server-priced highlight",
-        cost: 73,
-        settings: {
-          duration_hours: 24
-        }
-      )
+    let!(:enabled_feature) do
+      YakFeature
+        .find_by!(feature_key: "post_highlight")
+        .tap do |feature|
+          feature.update!(
+            feature_name: "Server-priced highlight",
+            cost: 73,
+            settings: {
+              duration_hours: 24
+            }
+          )
+        end
     end
     fab!(:disabled_feature) { Fabricate(:yak_feature, enabled: false) }
 

@@ -13,7 +13,7 @@ class YaksController < ApplicationController
   def index
     wallet = YakWallet.for_user(current_user)
     transactions = wallet.yak_transactions.recent.limit(50)
-    features = YakFeature.enabled.order(:cost)
+    features = YakFeature.available.order(:cost)
 
     render json: {
              balance: current_user.yak_balance,
@@ -47,7 +47,7 @@ class YaksController < ApplicationController
 
   # Returns the enabled feature catalog used by contextual spending controls.
   def catalog
-    features = YakFeature.enabled.order(:category, :cost)
+    features = YakFeature.available.order(:category, :cost)
 
     render json: {
              features:
