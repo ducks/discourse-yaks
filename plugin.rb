@@ -298,7 +298,8 @@ after_initialize do
         user: post.user,
         action_key: "post_created",
         related_post: post,
-        related_topic: post.topic
+        related_topic: post.topic,
+        event_id: post.id
       )
     Rails.logger.info("[Yaks] Award result: #{result}")
   end
@@ -311,7 +312,8 @@ after_initialize do
     YakEarningService.award(
       user: topic.user,
       action_key: "topic_created",
-      related_topic: topic
+      related_topic: topic,
+      event_id: topic.id
     )
   end
 
@@ -326,7 +328,8 @@ after_initialize do
       user: post.user,
       action_key: "post_liked",
       related_post: post,
-      related_topic: post.topic
+      related_topic: post.topic,
+      event_id: "#{post.id}:#{post_action.user_id}"
     )
   end
 
@@ -340,7 +343,8 @@ after_initialize do
       user: post.user,
       action_key: "solution_accepted",
       related_post: post,
-      related_topic: post.topic
+      related_topic: post.topic,
+      event_id: post.id
     )
   end
 end

@@ -12,6 +12,29 @@ RSpec.describe YakEarningService do
 
   describe ".award" do
     context "for post_created" do
+      it "awards a source event only once" do
+        post =
+          Fabricate(
+            :post,
+            user: user,
+            raw: "This is a test post with more than twenty characters"
+          )
+
+        results =
+          2.times.map do
+            described_class.award(
+              user: post.user,
+              action_key: "post_created",
+              related_post: post,
+              related_topic: post.topic
+            )
+          end
+
+        expect(results).to eq([true, false])
+        expect(user.reload.yak_balance).to eq(2)
+        expect(YakWallet.for_user(user).yak_transactions.count).to eq(1)
+      end
+
       it "awards Yaks for valid post by TL1 user" do
         post =
           Fabricate(
@@ -175,6 +198,30 @@ RSpec.describe YakEarningService do
         expect(result).to eq(true)
         expect(user.reload.yak_balance).to eq(3)
       end
+
+      it "awards distinct like events on the same post" do
+        post = Fabricate(:post, user: user, raw: "A popular post with content")
+
+        first =
+          described_class.award(
+            user: post.user,
+            action_key: "post_liked",
+            related_post: post,
+            related_topic: post.topic,
+            event_id: 101
+          )
+        second =
+          described_class.award(
+            user: post.user,
+            action_key: "post_liked",
+            related_post: post,
+            related_topic: post.topic,
+            event_id: 102
+          )
+
+        expect([first, second]).to eq([true, true])
+        expect(user.reload.yak_balance).to eq(6)
+      end
     end
 
     context "for solution_accepted" do
@@ -245,11 +292,19 @@ RSpec.describe YakEarningService do
 
       # Create transaction from yesterday
       freeze_time 1.day.ago do
-        wallet.add_yaks(rule.amount, "earn", "Earned from: Post Created")
+        wallet.add_yaks(
+          rule.amount,
+          "earning_post_created",
+          "Earned from: Post Created"
+        )
       end
 
       # Create transaction from today
-      wallet.add_yaks(rule.amount, "earn", "Earned from: Post Created")
+      wallet.add_yaks(
+        rule.amount,
+        "earning_post_created",
+        "Earned from: Post Created"
+      )
 
       count = YakEarningService.get_daily_earning_count(user, "post_created")
       expect(count).to eq(1) # Only today's transaction
@@ -284,7 +339,11 @@ RSpec.describe YakEarningService do
 
       # Award up to daily cap
       rule.daily_cap.times do
-        wallet.add_yaks(rule.amount, "earn", "Earned from: Post Created")
+        wallet.add_yaks(
+          rule.amount,
+          "earning_post_created",
+          "Earned from: Post Created"
+        )
       end
 
       result =
