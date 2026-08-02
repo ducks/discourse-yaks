@@ -1,19 +1,20 @@
 import Component from "@glimmer/component";
-import { service } from "@ember/service";
-import { action } from "@ember/object";
 import { tracked } from "@glimmer/tracking";
-import { on } from "@ember/modifier";
-import { eq, or, not } from "truth-helpers";
 import { concat } from "@ember/helper";
+import { on } from "@ember/modifier";
+import { action } from "@ember/object";
+import { service } from "@ember/service";
 import DButton from "discourse/components/d-button";
 import DModal from "discourse/components/d-modal";
-import { i18n } from "discourse-i18n";
 import { ajax } from "discourse/lib/ajax";
 import { popupAjaxError } from "discourse/lib/ajax-error";
+import { not, notEq, or } from "discourse/truth-helpers";
+import { i18n } from "discourse-i18n";
 import { YakFeatureQuantity } from "discourse/plugins/discourse-yaks/discourse/lib/yak-feature-quantity";
 
 export default class CustomTitleModal extends Component {
   @service currentUser;
+
   @tracked titleText = "";
   @tracked processing = false;
   @tracked quantityCalc;
@@ -52,7 +53,11 @@ export default class CustomTitleModal extends Component {
   }
 
   get canSubmit() {
-    return this.canAfford && this.titleText.trim().length > 0 && this.titleText.trim().length <= 50;
+    return (
+      this.canAfford &&
+      this.titleText.trim().length > 0 &&
+      this.titleText.trim().length <= 50
+    );
   }
 
   @action
@@ -63,13 +68,13 @@ export default class CustomTitleModal extends Component {
   @action
   updateQuantity(event) {
     this.quantityCalc.quantity = event.target.value;
-    // Force Ember to notice the change
-    this.quantityCalc = this.quantityCalc;
   }
 
   @action
   async applyTitle() {
-    if (!this.canSubmit) return;
+    if (!this.canSubmit) {
+      return;
+    }
 
     this.processing = true;
 
@@ -119,7 +124,8 @@ export default class CustomTitleModal extends Component {
               {{on "input" this.updateTitle}}
             />
             <div class="character-count">
-              {{this.titleText.length}} / 50 characters
+              {{this.titleText.length}}
+              / 50 characters
             </div>
           </div>
 
@@ -135,7 +141,9 @@ export default class CustomTitleModal extends Component {
               {{on "input" this.updateQuantity}}
             />
             <div class="duration-display">
-              {{this.totalDuration}} days ({{this.quantity}} month{{#if (not (eq this.quantity 1))}}s{{/if}})
+              {{this.totalDuration}}
+              days ({{this.quantity}}
+              month{{#if (notEq this.quantity 1)}}s{{/if}})
             </div>
           </div>
 
@@ -152,14 +160,20 @@ export default class CustomTitleModal extends Component {
           </div>
 
           <div class="cost-info">
-            <strong>Cost:</strong> {{this.totalCost}} Yaks ({{this.baseCost}} × {{this.quantity}})
+            <strong>Cost:</strong>
+            {{this.totalCost}}
+            Yaks ({{this.baseCost}}
+            ×
+            {{this.quantity}})
             <br />
-            <strong>Your Balance:</strong> {{this.balance}} Yaks
-            {{#if (not this.canAfford)}}
+            <strong>Your Balance:</strong>
+            {{this.balance}}
+            Yaks
+            {{#unless this.canAfford}}
               <div class="insufficient-balance">
                 Insufficient balance!
               </div>
-            {{/if}}
+            {{/unless}}
           </div>
         </div>
       </:body>
@@ -171,7 +185,14 @@ export default class CustomTitleModal extends Component {
           @translatedLabel={{if
             this.processing
             (i18n "yaks.applying")
-            (concat (i18n "yaks.apply_custom_title") " (" this.totalCost " " (i18n "yaks.currency") ")")
+            (concat
+              (i18n "yaks.apply_custom_title")
+              " ("
+              this.totalCost
+              " "
+              (i18n "yaks.currency")
+              ")"
+            )
           }}
           class="btn-primary"
         />

@@ -18,19 +18,18 @@ class YakFeature < ActiveRecord::Base
   #
   # @returns [Array<YakFeature>] The created features
   def self.seed_default_features
-    return if YakFeature.exists?
-
     default_features = [
       {
         feature_key: "post_highlight",
         feature_name: "Post Highlighting",
-        description: "Add a colored border and background to your post to make it stand out",
+        description:
+          "Add a colored border and background to your post to make it stand out",
         cost: 25,
         category: "post",
         settings: {
           default_color: "gold",
-          duration: nil,
-        },
+          duration: nil
+        }
       },
       {
         feature_key: "post_pin",
@@ -39,33 +38,39 @@ class YakFeature < ActiveRecord::Base
         cost: 50,
         category: "post",
         settings: {
-          duration_hours: 24,
-        },
+          duration_hours: 24
+        }
       },
       {
         feature_key: "custom_flair",
         feature_name: "Custom User Flair",
-        description: "Display custom text and color flair next to your username for 30 days",
+        description:
+          "Display custom text and color flair next to your username for 30 days",
         cost: 100,
         category: "user",
         settings: {
           duration_days: 30,
-          max_length: 20,
-        },
+          max_length: 20
+        }
       },
       {
         feature_key: "post_boost",
         feature_name: "Post Boost",
-        description: "Give your post priority in feeds and search results for 72 hours",
+        description:
+          "Give your post priority in feeds and search results for 72 hours",
         cost: 30,
         category: "post",
         settings: {
-          duration_hours: 72,
-        },
-      },
+          duration_hours: 72
+        }
+      }
     ]
 
-    default_features.map { |attrs| create!(attrs) }
+    default_features.map do |attrs|
+      create_with(attrs.except(:feature_key)).find_or_create_by!(
+        feature_key: attrs[:feature_key]
+      )
+    end
   end
 
   # Checks if a user can afford this feature.
@@ -73,6 +78,6 @@ class YakFeature < ActiveRecord::Base
   # @param user [User] The user to check
   # @returns [Boolean] True if user has sufficient balance
   def affordable_by?(user)
-    user.yak_balance >= cost
+    YakWallet.find_by(user_id: user.id)&.balance.to_i >= cost
   end
 end

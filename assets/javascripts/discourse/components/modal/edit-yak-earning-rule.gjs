@@ -1,16 +1,14 @@
 import Component from "@glimmer/component";
 import { tracked } from "@glimmer/tracking";
-import { action } from "@ember/object";
-import { service } from "@ember/service";
-import { on } from "@ember/modifier";
 import { fn } from "@ember/helper";
-import DModal from "discourse/components/d-modal";
+import { on } from "@ember/modifier";
+import { action } from "@ember/object";
 import DButton from "discourse/components/d-button";
+import DModal from "discourse/components/d-modal";
 import { ajax } from "discourse/lib/ajax";
 import { popupAjaxError } from "discourse/lib/ajax-error";
 
 export default class EditYakEarningRuleModal extends Component {
-  @service modal;
   @tracked amount;
   @tracked dailyCap;
   @tracked minTrustLevel;
@@ -31,15 +29,18 @@ export default class EditYakEarningRuleModal extends Component {
     this.saving = true;
 
     try {
-      await ajax(`/admin/plugins/yaks/earning_rules/${this.args.model.rule.id}`, {
-        type: "PUT",
-        data: {
-          amount: this.amount,
-          daily_cap: this.dailyCap,
-          min_trust_level: this.minTrustLevel,
-          enabled: this.enabled,
-        },
-      });
+      await ajax(
+        `/admin/plugins/yaks/earning_rules/${this.args.model.rule.id}`,
+        {
+          type: "PUT",
+          data: {
+            amount: this.amount,
+            daily_cap: this.dailyCap,
+            min_trust_level: this.minTrustLevel,
+            enabled: this.enabled,
+          },
+        }
+      );
 
       this.args.closeModal();
       return true;
@@ -99,7 +100,10 @@ export default class EditYakEarningRuleModal extends Component {
               <select
                 id="min-trust-level"
                 value={{this.minTrustLevel}}
-                {{on "change" (fn (mut this.minTrustLevel) value="target.value")}}
+                {{on
+                  "change"
+                  (fn (mut this.minTrustLevel) value="target.value")
+                }}
               >
                 <option value="0">TL0 (New User)</option>
                 <option value="1">TL1 (Basic User)</option>

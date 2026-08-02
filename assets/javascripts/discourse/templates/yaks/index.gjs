@@ -1,14 +1,13 @@
 import Component from "@glimmer/component";
-import { service } from "@ember/service";
-import { action } from "@ember/object";
 import { on } from "@ember/modifier";
-import { eq, or } from "truth-helpers";
+import { action } from "@ember/object";
+import { service } from "@ember/service";
+import { eq, or } from "discourse/truth-helpers";
 import { i18n } from "discourse-i18n";
 import CustomFlairModal from "../../components/modal/custom-flair";
 import CustomTitleModal from "../../components/modal/custom-title";
 
 export default class YaksWallet extends Component {
-  @service router;
   @service modal;
 
   get formattedTransactions() {
@@ -26,13 +25,17 @@ export default class YaksWallet extends Component {
 
   @action
   openCustomFlairModal() {
-    const feature = this.args.model.features.find((f) => f.key === "custom_flair");
+    const feature = this.args.model.features.find(
+      (f) => f.key === "custom_flair"
+    );
     this.modal.show(CustomFlairModal, { model: { feature } });
   }
 
   @action
   openCustomTitleModal() {
-    const feature = this.args.model.features.find((f) => f.key === "custom_title");
+    const feature = this.args.model.features.find(
+      (f) => f.key === "custom_title"
+    );
     this.modal.show(CustomTitleModal, { model: { feature } });
   }
 
@@ -68,11 +71,23 @@ export default class YaksWallet extends Component {
           <h2>{{i18n "yaks.features.title"}}</h2>
           <div class="features-grid">
             {{#each @model.features as |feature|}}
-              {{#if (or (eq feature.key "custom_flair") (eq feature.key "custom_title"))}}
+              {{#if
+                (or
+                  (eq feature.key "custom_flair")
+                  (eq feature.key "custom_title")
+                )
+              }}
                 <div
                   class="feature-card clickable"
                   role="button"
-                  {{on "click" (if (eq feature.key "custom_flair") this.openCustomFlairModal this.openCustomTitleModal)}}
+                  {{on
+                    "click"
+                    (if
+                      (eq feature.key "custom_flair")
+                      this.openCustomFlairModal
+                      this.openCustomTitleModal
+                    )
+                  }}
                 >
                   <div class="feature-name">{{feature.name}}</div>
                   <div class="feature-description">{{feature.description}}</div>
@@ -109,7 +124,7 @@ export default class YaksWallet extends Component {
           <h2>{{i18n "yaks.wallet.transaction_history"}}</h2>
           <div class="transactions-list">
             {{#each this.formattedTransactions as |tx|}}
-              <div class="transaction-item {{if tx.isCredit "credit" "debit"}}">
+              <div class="transaction-item {{if tx.isCredit 'credit' 'debit'}}">
                 <div class="description">
                   <strong>{{tx.description}}</strong>
                   <div class="meta">

@@ -1,12 +1,16 @@
 import { apiInitializer } from "discourse/lib/api";
 
-export default apiInitializer("1.14.0", (api) => {
+export default apiInitializer((api) => {
   api.decorateCookedElement(
     (element, helper) => {
-      if (!helper) return;
+      if (!helper) {
+        return;
+      }
 
       const post = helper.getModel();
-      if (!post) return;
+      if (!post) {
+        return;
+      }
 
       const yakFeatures = post.yak_features;
       const topic = helper.getModel().topic;
@@ -16,7 +20,9 @@ export default apiInitializer("1.14.0", (api) => {
       const isFirstPostInBoostedTopic =
         post.post_number === 1 && topicYakFeatures?.boosted?.enabled;
 
-      if (!yakFeatures && !isFirstPostInBoostedTopic) return;
+      if (!yakFeatures && !isFirstPostInBoostedTopic) {
+        return;
+      }
 
       // Try to find article - might not be in DOM yet
       let article = element.closest("article");
@@ -24,8 +30,12 @@ export default apiInitializer("1.14.0", (api) => {
       // If not found, wait a tick and try via document query
       if (!article) {
         requestAnimationFrame(() => {
-          article = document.querySelector(`article[data-post-id="${post.id}"]`);
-          if (!article) return;
+          article = document.querySelector(
+            `article[data-post-id="${post.id}"]`
+          );
+          if (!article) {
+            return;
+          }
 
           // Apply post-level features
           if (yakFeatures) {

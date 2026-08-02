@@ -13,7 +13,7 @@ class YakTransaction < ActiveRecord::Base
   validates :transaction_type,
             presence: true,
             inclusion: {
-              in: %w[purchase earn spend refund admin],
+              in: %w[purchase earn spend refund admin]
             }
   validates :user_id, presence: true
   validates :yak_wallet_id, presence: true

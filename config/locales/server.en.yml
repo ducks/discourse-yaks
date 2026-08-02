@@ -63,6 +63,8 @@ en:
       feature_not_found: "Feature not found"
       feature_disabled: "This feature is currently disabled"
       invalid_post: "Invalid post"
+      invalid_target: "This feature cannot be applied to that target"
+      not_allowed: "You cannot apply this feature to that content"
       already_applied: "This feature has already been applied to this post"
 
     admin:

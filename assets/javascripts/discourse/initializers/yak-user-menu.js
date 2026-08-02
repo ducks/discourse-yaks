@@ -5,7 +5,7 @@ export default {
   name: "yak-user-menu",
 
   initialize(container) {
-    withPluginApi("1.14.0", (api) => {
+    withPluginApi((api) => {
       const siteSettings = container.lookup("service:site-settings");
       if (!siteSettings.yaks_enabled) {
         return;
@@ -28,7 +28,7 @@ export default {
         href: "/yaks",
         get content() {
           return i18n("yaks.user_menu.balance", {
-            count: currentUser.yak_balance || 0
+            count: currentUser.yak_balance || 0,
           });
         },
       });

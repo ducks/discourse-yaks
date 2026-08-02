@@ -1,7 +1,11 @@
+import { tracked } from "@glimmer/tracking";
+
 /**
  * Shared quantity calculation logic for Yak features
  */
 export class YakFeatureQuantity {
+  @tracked _quantity;
+
   constructor(feature, quantity = 1) {
     this.feature = feature;
     this._quantity = quantity;

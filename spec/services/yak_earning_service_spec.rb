@@ -11,16 +11,21 @@ RSpec.describe YakEarningService do
   end
 
   describe ".award" do
-    context "post_created" do
+    context "for post_created" do
       it "awards Yaks for valid post by TL1 user" do
-        post = Fabricate(:post, user: user, raw: "This is a test post with more than twenty characters")
+        post =
+          Fabricate(
+            :post,
+            user: user,
+            raw: "This is a test post with more than twenty characters"
+          )
 
         result =
           YakEarningService.award(
             user: post.user,
             action_key: "post_created",
             related_post: post,
-            related_topic: post.topic,
+            related_topic: post.topic
           )
 
         expect(result).to eq(true)
@@ -36,14 +41,18 @@ RSpec.describe YakEarningService do
 
       it "does not award Yaks to TL0 user" do
         post =
-          Fabricate(:post, user: tl0_user, raw: "This is a test post with more than twenty characters")
+          Fabricate(
+            :post,
+            user: tl0_user,
+            raw: "This is a test post with more than twenty characters"
+          )
 
         result =
           YakEarningService.award(
             user: post.user,
             action_key: "post_created",
             related_post: post,
-            related_topic: post.topic,
+            related_topic: post.topic
           )
 
         expect(result).to eq(false)
@@ -58,7 +67,7 @@ RSpec.describe YakEarningService do
             user: post.user,
             action_key: "post_created",
             related_post: post,
-            related_topic: post.topic,
+            related_topic: post.topic
           )
 
         expect(result).to eq(false)
@@ -71,14 +80,19 @@ RSpec.describe YakEarningService do
 
         # Create posts up to daily cap
         daily_cap.times do |i|
-          post = Fabricate(:post, user: user, raw: "Post number #{i} with enough characters here")
+          post =
+            Fabricate(
+              :post,
+              user: user,
+              raw: "Post number #{i} with enough characters here"
+            )
 
           result =
             YakEarningService.award(
               user: post.user,
               action_key: "post_created",
               related_post: post,
-              related_topic: post.topic,
+              related_topic: post.topic
             )
 
           expect(result).to eq(true)
@@ -89,7 +103,7 @@ RSpec.describe YakEarningService do
           Fabricate(
             :post,
             user: user,
-            raw: "This post exceeds the daily cap and should not earn",
+            raw: "This post exceeds the daily cap and should not earn"
           )
 
         result =
@@ -97,7 +111,7 @@ RSpec.describe YakEarningService do
             user: post.user,
             action_key: "post_created",
             related_post: post,
-            related_topic: post.topic,
+            related_topic: post.topic
           )
 
         expect(result).to eq(false)
@@ -105,7 +119,7 @@ RSpec.describe YakEarningService do
       end
     end
 
-    context "topic_created" do
+    context "for topic_created" do
       it "awards Yaks for valid topic by TL1 user" do
         topic = Fabricate(:topic, user: user)
         post =
@@ -113,14 +127,15 @@ RSpec.describe YakEarningService do
             :post,
             user: user,
             topic: topic,
-            raw: "This is a topic with more than fifty characters in it for testing purposes",
+            raw:
+              "This is a topic with more than fifty characters in it for testing purposes"
           )
 
         result =
           YakEarningService.award(
             user: topic.user,
             action_key: "topic_created",
-            related_topic: topic,
+            related_topic: topic
           )
 
         expect(result).to eq(true)
@@ -129,13 +144,14 @@ RSpec.describe YakEarningService do
 
       it "does not award Yaks for topic under 50 characters" do
         topic = Fabricate(:topic, user: user)
-        post = Fabricate(:post, user: user, topic: topic, raw: "Short topic content")
+        post =
+          Fabricate(:post, user: user, topic: topic, raw: "Short topic content")
 
         result =
           YakEarningService.award(
             user: topic.user,
             action_key: "topic_created",
-            related_topic: topic,
+            related_topic: topic
           )
 
         expect(result).to eq(false)
@@ -143,7 +159,7 @@ RSpec.describe YakEarningService do
       end
     end
 
-    context "post_liked" do
+    context "for post_liked" do
       it "awards Yaks when post receives like" do
         post = Fabricate(:post, user: user, raw: "A likeable post with content")
         liker = Fabricate(:user)
@@ -153,7 +169,7 @@ RSpec.describe YakEarningService do
             user: post.user,
             action_key: "post_liked",
             related_post: post,
-            related_topic: post.topic,
+            related_topic: post.topic
           )
 
         expect(result).to eq(true)
@@ -161,7 +177,7 @@ RSpec.describe YakEarningService do
       end
     end
 
-    context "solution_accepted" do
+    context "for solution_accepted" do
       it "awards Yaks when post marked as solution" do
         post = Fabricate(:post, user: user, raw: "This is the solution")
 
@@ -170,7 +186,7 @@ RSpec.describe YakEarningService do
             user: post.user,
             action_key: "solution_accepted",
             related_post: post,
-            related_topic: post.topic,
+            related_topic: post.topic
           )
 
         expect(result).to eq(true)
@@ -190,7 +206,7 @@ RSpec.describe YakEarningService do
               user: post.user,
               action_key: "solution_accepted",
               related_post: post,
-              related_topic: post.topic,
+              related_topic: post.topic
             )
 
           expect(result).to eq(true)
@@ -205,14 +221,15 @@ RSpec.describe YakEarningService do
         rule = YakEarningRule.find_by(action_key: "post_created")
         rule.update!(enabled: false)
 
-        post = Fabricate(:post, user: user, raw: "Post with disabled earning rule")
+        post =
+          Fabricate(:post, user: user, raw: "Post with disabled earning rule")
 
         result =
           YakEarningService.award(
             user: post.user,
             action_key: "post_created",
             related_post: post,
-            related_topic: post.topic,
+            related_topic: post.topic
           )
 
         expect(result).to eq(false)
@@ -240,20 +257,23 @@ RSpec.describe YakEarningService do
 
     it "returns 0 when user has no wallet" do
       new_user = Fabricate(:user)
-      count = YakEarningService.get_daily_earning_count(new_user, "post_created")
+      count =
+        YakEarningService.get_daily_earning_count(new_user, "post_created")
       expect(count).to eq(0)
     end
   end
 
   describe ".can_earn?" do
     it "returns true when all conditions met" do
-      result = YakEarningService.can_earn?(user: user, action_key: "post_created")
+      result =
+        YakEarningService.can_earn?(user: user, action_key: "post_created")
       expect(result[:can_earn]).to eq(true)
       expect(result[:reason]).to include("Can earn 2 Yaks")
     end
 
     it "returns false when trust level too low" do
-      result = YakEarningService.can_earn?(user: tl0_user, action_key: "post_created")
+      result =
+        YakEarningService.can_earn?(user: tl0_user, action_key: "post_created")
       expect(result[:can_earn]).to eq(false)
       expect(result[:reason]).to include("Trust level too low")
     end
@@ -263,15 +283,19 @@ RSpec.describe YakEarningService do
       wallet = YakWallet.for_user(user)
 
       # Award up to daily cap
-      rule.daily_cap.times { wallet.add_yaks(rule.amount, "earn", "Earned from: Post Created") }
+      rule.daily_cap.times do
+        wallet.add_yaks(rule.amount, "earn", "Earned from: Post Created")
+      end
 
-      result = YakEarningService.can_earn?(user: user, action_key: "post_created")
+      result =
+        YakEarningService.can_earn?(user: user, action_key: "post_created")
       expect(result[:can_earn]).to eq(false)
       expect(result[:reason]).to include("Daily cap reached")
     end
 
     it "returns false when rule not found" do
-      result = YakEarningService.can_earn?(user: user, action_key: "nonexistent")
+      result =
+        YakEarningService.can_earn?(user: user, action_key: "nonexistent")
       expect(result[:can_earn]).to eq(false)
       expect(result[:reason]).to include("Rule not found")
     end

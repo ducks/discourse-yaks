@@ -9,6 +9,7 @@ import { popupAjaxError } from "discourse/lib/ajax-error";
 
 export default class NewYakPackageModal extends Component {
   @service router;
+
   @tracked saving = false;
 
   get formData() {
@@ -55,11 +56,7 @@ export default class NewYakPackageModal extends Component {
       class="new-yak-package-modal"
     >
       <:body>
-        <Form
-          @data={{this.formData}}
-          @onSubmit={{this.save}}
-          as |form|
-        >
+        <Form @data={{this.formData}} @onSubmit={{this.save}} as |form|>
           <form.Field
             @name="name"
             @title="Package Name"

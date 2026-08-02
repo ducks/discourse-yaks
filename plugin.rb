@@ -31,7 +31,7 @@ register_svg_icon "trophy"
 
 after_initialize do
   module ::DiscourseYaks
-    PLUGIN_NAME ||= "discourse-yaks"
+    PLUGIN_NAME = "discourse-yaks"
 
     class Engine < ::Rails::Engine
       engine_name PLUGIN_NAME
@@ -52,34 +52,39 @@ after_initialize do
   require_relative "app/services/yak_earning_service"
   require_relative "app/models/yak_earning_rule"
 
-  # Add yak_balance method to User model
-  add_to_class(:user, :yak_balance) do
-    wallet = YakWallet.find_by(user_id: id)
-    wallet&.balance || 0
-  end
-
   Discourse::Application.routes.append do
     get "/yaks" => "yaks#index"
     get "/yaks/purchase" => "yaks#index"
     post "/yaks/spend" => "yaks#spend"
 
-    get "/admin/plugins/yaks/stats" => "admin/yaks#stats", constraints: StaffConstraint.new
-    post "/admin/plugins/yaks/give" => "admin/yaks#give_yaks", constraints: StaffConstraint.new
-    get "/admin/plugins/yaks/transactions" => "admin/yaks#transactions", constraints: StaffConstraint.new
-    get "/admin/plugins/yaks/features" => "admin/yaks#features", constraints: StaffConstraint.new
-    post "/admin/plugins/yaks/features" => "admin/yaks#create_feature", constraints: StaffConstraint.new
-    put "/admin/plugins/yaks/features/:id" => "admin/yaks#update_feature", constraints: StaffConstraint.new
-    get "/admin/plugins/yaks/packages" => "admin/yaks#packages", constraints: StaffConstraint.new
-    post "/admin/plugins/yaks/packages" => "admin/yaks#create_package", constraints: StaffConstraint.new
-    put "/admin/plugins/yaks/packages/:id" => "admin/yaks#update_package", constraints: StaffConstraint.new
-    delete "/admin/plugins/yaks/packages/:id" => "admin/yaks#delete_package", constraints: StaffConstraint.new
-    get "/admin/plugins/yaks/earning_rules" => "admin/yaks#earning_rules", constraints: StaffConstraint.new
-    put "/admin/plugins/yaks/earning_rules/:id" => "admin/yaks#update_earning_rule", constraints: StaffConstraint.new
+    get "/admin/plugins/yaks/stats" => "admin/yaks#stats",
+        :constraints => StaffConstraint.new
+    post "/admin/plugins/yaks/give" => "admin/yaks#give_yaks",
+         :constraints => StaffConstraint.new
+    get "/admin/plugins/yaks/transactions" => "admin/yaks#transactions",
+        :constraints => StaffConstraint.new
+    get "/admin/plugins/yaks/features" => "admin/yaks#features",
+        :constraints => StaffConstraint.new
+    post "/admin/plugins/yaks/features" => "admin/yaks#create_feature",
+         :constraints => StaffConstraint.new
+    put "/admin/plugins/yaks/features/:id" => "admin/yaks#update_feature",
+        :constraints => StaffConstraint.new
+    get "/admin/plugins/yaks/packages" => "admin/yaks#packages",
+        :constraints => StaffConstraint.new
+    post "/admin/plugins/yaks/packages" => "admin/yaks#create_package",
+         :constraints => StaffConstraint.new
+    put "/admin/plugins/yaks/packages/:id" => "admin/yaks#update_package",
+        :constraints => StaffConstraint.new
+    delete "/admin/plugins/yaks/packages/:id" => "admin/yaks#delete_package",
+           :constraints => StaffConstraint.new
+    get "/admin/plugins/yaks/earning_rules" => "admin/yaks#earning_rules",
+        :constraints => StaffConstraint.new
+    put "/admin/plugins/yaks/earning_rules/:id" =>
+          "admin/yaks#update_earning_rule",
+        :constraints => StaffConstraint.new
   end
 
-  add_to_serializer(:current_user, :yak_balance) do
-    object.yak_balance || 0
-  end
+  add_to_serializer(:current_user, :yak_balance) { object.yak_balance || 0 }
 
   # Register custom fields
   register_post_custom_field_type("yak_features", :json)
@@ -87,46 +92,46 @@ after_initialize do
   register_user_custom_field_type("yak_features", :json)
 
   # Allow custom field in topic view
-  topic_view_post_custom_fields_allowlister do |user, topic|
-    ["yak_features"]
-  end
+  topic_view_post_custom_fields_allowlister { |user, topic| ["yak_features"] }
 
   # Add yak_features to post serializer
   add_to_serializer(
     :post,
     :yak_features,
     include_condition: -> { object.custom_fields["yak_features"].present? }
-  ) do
-    object.custom_fields["yak_features"]
-  end
+  ) { object.custom_fields["yak_features"] }
 
   # Add yak_features to topic list item serializer
   add_to_serializer(
     :topic_list_item,
     :yak_features,
     include_condition: -> { object.custom_fields["yak_features"].present? }
-  ) do
-    object.custom_fields["yak_features"]
-  end
+  ) { object.custom_fields["yak_features"] }
 
   # Add yak_features to topic view serializer
   add_to_serializer(
     :topic_view,
     :yak_features,
-    include_condition: -> { object.topic.custom_fields["yak_features"].present? }
-  ) do
-    object.topic.custom_fields["yak_features"]
-  end
+    include_condition: -> do
+      object.topic.custom_fields["yak_features"].present?
+    end
+  ) { object.topic.custom_fields["yak_features"] }
 
   # Preload topic custom fields to avoid N+1 queries
-  TopicList.preloaded_custom_fields << "yak_features" if TopicList.respond_to?(:preloaded_custom_fields)
-  Topic.preloaded_custom_fields << "yak_features" if Topic.respond_to?(:preloaded_custom_fields)
+  if TopicList.respond_to?(:preloaded_custom_fields)
+    TopicList.preloaded_custom_fields << "yak_features"
+  end
+  if Topic.respond_to?(:preloaded_custom_fields)
+    Topic.preloaded_custom_fields << "yak_features"
+  end
 
   # Preload user custom fields for flair
-  User.preloaded_custom_fields << "yak_features" if User.respond_to?(:preloaded_custom_fields)
+  if User.respond_to?(:preloaded_custom_fields)
+    User.preloaded_custom_fields << "yak_features"
+  end
 
   # Override flair fields with yak custom flair if present
-  [:post, :user_card, :post_action_user].each do |serializer_name|
+  %i[post user_card post_action_user].each do |serializer_name|
     # Set a dummy flair_group_id so the frontend component renders flair
     add_to_serializer(serializer_name, :flair_group_id) do
       begin
@@ -228,7 +233,12 @@ after_initialize do
   end
 
   # Override title in additional serializers
-  [:user_name, :group_post_user, :group_user, :hidden_profile].each do |serializer_name|
+  %i[
+    user_name
+    group_post_user
+    group_user
+    hidden_profile
+  ].each do |serializer_name|
     add_to_serializer(serializer_name, :title) do
       begin
         title_data = object.custom_fields["yak_features"]&.dig("title")
@@ -238,7 +248,9 @@ after_initialize do
           object.title
         end
       rescue => e
-        Rails.logger.error("Error in title serializer (#{serializer_name}): #{e.message}")
+        Rails.logger.error(
+          "Error in title serializer (#{serializer_name}): #{e.message}"
+        )
         object.title
       end
     end
@@ -263,36 +275,34 @@ after_initialize do
   end
 
   # Seed default features on plugin initialization
-  DiscourseEvent.on(:site_setting_changed) do |name, old_value, new_value|
+  on(:site_setting_changed) do |name, _old_value, new_value|
     if name == :yaks_enabled && new_value == true
       YakFeature.seed_default_features
     end
   end
 
-  # Automatically create wallet for new users
-  DiscourseEvent.on(:user_created) do |user|
-    YakWallet.for_user(user)
-  end
-
   # Earning system event hooks
-  DiscourseEvent.on(:post_created) do |post, opts, user|
+  on(:post_created) do |post, _opts, _user|
     Rails.logger.info("[Yaks] Post created event fired for post #{post.id}")
     next if post.post_type != Post.types[:regular]
     next if post.deleted_at.present?
     next if post.hidden
     next if !post.user
 
-    Rails.logger.info("[Yaks] Attempting to award Yaks to user #{post.user.id} for post creation")
-    result = YakEarningService.award(
-      user: post.user,
-      action_key: "post_created",
-      related_post: post,
-      related_topic: post.topic,
+    Rails.logger.info(
+      "[Yaks] Attempting to award Yaks to user #{post.user.id} for post creation"
     )
+    result =
+      YakEarningService.award(
+        user: post.user,
+        action_key: "post_created",
+        related_post: post,
+        related_topic: post.topic
+      )
     Rails.logger.info("[Yaks] Award result: #{result}")
   end
 
-  DiscourseEvent.on(:topic_created) do |topic, opts, user|
+  on(:topic_created) do |topic, _opts, _user|
     next if topic.deleted_at.present?
     next if !topic.visible
     next if !topic.user
@@ -300,11 +310,11 @@ after_initialize do
     YakEarningService.award(
       user: topic.user,
       action_key: "topic_created",
-      related_topic: topic,
+      related_topic: topic
     )
   end
 
-  DiscourseEvent.on(:like_created) do |post_action|
+  on(:like_created) do |post_action|
     post = post_action.post
     next if !post
     next if post.deleted_at.present?
@@ -315,12 +325,12 @@ after_initialize do
       user: post.user,
       action_key: "post_liked",
       related_post: post,
-      related_topic: post.topic,
+      related_topic: post.topic
     )
   end
 
   # Hook for discourse-solved plugin (if installed)
-  DiscourseEvent.on(:accepted_solution) do |post|
+  on(:accepted_solution) do |post|
     next if !post
     next if post.deleted_at.present?
     next if post.hidden
@@ -329,7 +339,7 @@ after_initialize do
       user: post.user,
       action_key: "solution_accepted",
       related_post: post,
-      related_topic: post.topic,
+      related_topic: post.topic
     )
   end
 end

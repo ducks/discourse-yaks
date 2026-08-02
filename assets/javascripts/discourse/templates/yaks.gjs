@@ -1,5 +1,3 @@
-const YaksTemplate = <template>
-  {{outlet}}
-</template>;
+const YaksTemplate = <template>{{outlet}}</template>;
 
 export default YaksTemplate;

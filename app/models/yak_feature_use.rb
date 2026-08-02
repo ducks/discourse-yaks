@@ -14,12 +14,19 @@ class YakFeatureUse < ActiveRecord::Base
   validates :yak_feature_id, presence: true
   validates :yak_transaction_id, presence: true
 
-  scope :active, -> { where("expires_at IS NULL OR expires_at > ?", Time.zone.now) }
-  scope :expired, -> { where("expires_at IS NOT NULL AND expires_at <= ?", Time.zone.now) }
+  scope :active,
+        -> { where("expires_at IS NULL OR expires_at > ?", Time.zone.now) }
+  scope :expired,
+        -> do
+          where("expires_at IS NOT NULL AND expires_at <= ?", Time.zone.now)
+        end
   scope :for_post, ->(post_id) { where(related_post_id: post_id) }
   scope :for_topic, ->(topic_id) { where(related_topic_id: topic_id) }
   scope :for_user, ->(user_id) { where(user_id: user_id) }
-  scope :by_feature, ->(feature_key) { joins(:yak_feature).where(yak_features: { feature_key: }) }
+  scope :by_feature,
+        ->(feature_key) do
+          joins(:yak_feature).where(yak_features: { feature_key: })
+        end
 
   # Checks if this feature use is currently active (not expired).
   #

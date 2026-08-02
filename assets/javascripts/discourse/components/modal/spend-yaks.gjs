@@ -1,18 +1,19 @@
 import Component from "@glimmer/component";
-import { service } from "@ember/service";
-import { action } from "@ember/object";
 import { tracked } from "@glimmer/tracking";
-import { on } from "@ember/modifier";
 import { fn } from "@ember/helper";
-import { eq, or, not } from "truth-helpers";
+import { on } from "@ember/modifier";
+import { action } from "@ember/object";
+import { service } from "@ember/service";
 import DButton from "discourse/components/d-button";
 import DModal from "discourse/components/d-modal";
-import { i18n } from "discourse-i18n";
 import { ajax } from "discourse/lib/ajax";
 import { popupAjaxError } from "discourse/lib/ajax-error";
+import { eq, not, or } from "discourse/truth-helpers";
+import { i18n } from "discourse-i18n";
 
 export default class SpendYaksModal extends Component {
   @service currentUser;
+
   @tracked selectedFeature = null;
   @tracked selectedColor = "gold";
   @tracked processing = false;
@@ -87,7 +88,9 @@ export default class SpendYaksModal extends Component {
   }
 
   get canAfford() {
-    if (!this.selectedFeatureData) return false;
+    if (!this.selectedFeatureData) {
+      return false;
+    }
     return this.balance >= this.selectedFeatureData.cost;
   }
 
@@ -103,7 +106,9 @@ export default class SpendYaksModal extends Component {
 
   @action
   async applyFeature() {
-    if (!this.selectedFeature || !this.canAfford) return;
+    if (!this.selectedFeature || !this.canAfford) {
+      return;
+    }
 
     this.processing = true;
 
@@ -120,7 +125,10 @@ export default class SpendYaksModal extends Component {
         data.topic_id = this.args.model.topic.id;
       }
 
-      if (this.selectedFeature === "post_highlight" || this.selectedFeature === "topic_boost") {
+      if (
+        this.selectedFeature === "post_highlight" ||
+        this.selectedFeature === "topic_boost"
+      ) {
         data.feature_data.color = this.selectedColor;
       }
 
@@ -165,10 +173,8 @@ export default class SpendYaksModal extends Component {
 
             {{#each this.features as |feature|}}
               <div
-                class="feature-option {{if
-                  (eq this.selectedFeature feature.id)
-                  'selected'
-                }}"
+                class="feature-option
+                  {{if (eq this.selectedFeature feature.id) 'selected'}}"
                 role="button"
                 {{on "click" (fn this.selectFeature feature.id)}}
               >
@@ -181,16 +187,19 @@ export default class SpendYaksModal extends Component {
             {{/each}}
           </div>
 
-          {{#if (or (eq this.selectedFeature "post_highlight") (eq this.selectedFeature "topic_boost"))}}
+          {{#if
+            (or
+              (eq this.selectedFeature "post_highlight")
+              (eq this.selectedFeature "topic_boost")
+            )
+          }}
             <div class="color-picker">
               <h3>{{i18n "yaks.modal.select_color"}}</h3>
               <div class="color-options">
                 {{#each this.colors as |color|}}
                   <div
-                    class="color-option {{if
-                      (eq this.selectedColor color.id)
-                      'selected'
-                    }}"
+                    class="color-option
+                      {{if (eq this.selectedColor color.id) 'selected'}}"
                     data-color={{color.id}}
                     role="button"
                     {{on "click" (fn this.selectColor color.id)}}
@@ -216,14 +225,14 @@ export default class SpendYaksModal extends Component {
         <DButton
           @action={{this.applyFeature}}
           @label="yaks.modal.apply"
-          @disabled={{or (not this.selectedFeature) (not this.canAfford) this.processing}}
+          @disabled={{or
+            (not this.selectedFeature)
+            (not this.canAfford)
+            this.processing
+          }}
           class="btn-primary"
         />
-        <DButton
-          @action={{@closeModal}}
-          @label="cancel"
-          class="btn-default"
-        />
+        <DButton @action={{@closeModal}} @label="cancel" class="btn-default" />
       </:footer>
     </DModal>
   </template>

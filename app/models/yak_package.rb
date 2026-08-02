@@ -5,10 +5,18 @@
 # @class YakPackage
 class YakPackage < ActiveRecord::Base
   validates :name, presence: true
-  validates :price_cents, presence: true, numericality: { greater_than_or_equal_to: 0 }
+  validates :price_cents,
+            presence: true,
+            numericality: {
+              greater_than_or_equal_to: 0
+            }
   validates :yaks, presence: true, numericality: { greater_than: 0 }
   validates :bonus_yaks, numericality: { greater_than_or_equal_to: 0 }
-  validates :position, presence: true, numericality: { greater_than_or_equal_to: 0 }
+  validates :position,
+            presence: true,
+            numericality: {
+              greater_than_or_equal_to: 0
+            }
 
   scope :enabled, -> { where(enabled: true) }
   scope :ordered, -> { order(:position) }

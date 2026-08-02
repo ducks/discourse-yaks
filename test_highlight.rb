@@ -9,7 +9,7 @@ puts "🦬 Testing Discourse Yaks Plugin..."
 # Parse arguments
 topic_id = ARGV[0]&.to_i
 post_number = ARGV[1]&.to_i || 1
-color = ARGV[2] || 'gold'
+color = ARGV[2] || "gold"
 
 if topic_id.nil? || topic_id == 0
   puts "Usage: bin/rails runner plugins/discourse-yaks/test_highlight.rb TOPIC_ID POST_NUMBER [COLOR]"
@@ -46,19 +46,22 @@ puts "✓ Wallet found/created - Balance: #{wallet.balance}"
 
 # Grant Yaks if needed
 if wallet.balance < 100
-  wallet.add_yaks(100, 'admin_grant', 'Testing Yaks plugin')
+  wallet.add_yaks(100, "admin_grant", "Testing Yaks plugin")
   puts "✓ Granted 100 Yaks - New balance: #{wallet.balance}"
 else
   puts "✓ User already has #{wallet.balance} Yaks"
 end
 
 # Apply highlight feature to the post
-result = YakFeatureService.apply_feature(
-  user,
-  'post_highlight',
-  related_post: post,
-  feature_data: { color: color }
-)
+result =
+  YakFeatureService.apply_feature(
+    user,
+    "post_highlight",
+    related_post: post,
+    feature_data: {
+      color: color
+    }
+  )
 
 if result[:success]
   puts "✓ Highlight applied successfully!"
