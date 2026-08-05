@@ -6,43 +6,16 @@
 class YaksController < ApplicationController
   requires_plugin DiscourseYaks::PLUGIN_NAME
   requires_login
+  skip_before_action :check_xhr, only: [:index]
 
   # Displays user's wallet, transaction history, and available features.
   #
   # @returns [JSON] Wallet data, transactions, and features
   def index
-    wallet = YakWallet.for_user(current_user)
-    transactions = wallet.yak_transactions.recent.limit(50)
-    features = YakFeature.available.order(:cost)
-
-    render json: {
-             balance: current_user.yak_balance,
-             lifetime_earned: wallet.lifetime_earned,
-             lifetime_spent: wallet.lifetime_spent,
-             transactions:
-               transactions.map do |tx|
-                 {
-                   id: tx.id,
-                   amount: tx.amount,
-                   type: tx.transaction_type,
-                   source: tx.source,
-                   description: tx.description,
-                   created_at: tx.created_at
-                 }
-               end,
-             features:
-               features.map do |f|
-                 {
-                   id: f.id,
-                   key: f.feature_key,
-                   name: f.feature_name,
-                   description: f.description,
-                   cost: f.cost,
-                   category: f.category,
-                   affordable: f.affordable_by?(current_user)
-                 }
-               end
-           }
+    respond_to do |format|
+      format.html { render "default/empty" }
+      format.json { render json: wallet_payload }
+    end
   end
 
   # Returns the enabled feature catalog used by contextual spending controls.
@@ -110,5 +83,42 @@ class YaksController < ApplicationController
              },
              status: :unprocessable_entity
     end
+  end
+
+  private
+
+  def wallet_payload
+    wallet = YakWallet.for_user(current_user)
+    transactions = wallet.yak_transactions.recent.limit(50)
+    features = YakFeature.available.order(:cost)
+
+    {
+      balance: wallet.balance,
+      lifetime_earned: wallet.lifetime_earned,
+      lifetime_spent: wallet.lifetime_spent,
+      transactions:
+        transactions.map do |tx|
+          {
+            id: tx.id,
+            amount: tx.amount,
+            type: tx.transaction_type,
+            source: tx.source,
+            description: tx.description,
+            created_at: tx.created_at
+          }
+        end,
+      features:
+        features.map do |feature|
+          {
+            id: feature.id,
+            key: feature.feature_key,
+            name: feature.feature_name,
+            description: feature.description,
+            cost: feature.cost,
+            category: feature.category,
+            affordable: feature.affordable_by?(current_user)
+          }
+        end
+    }
   end
 end

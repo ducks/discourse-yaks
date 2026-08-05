@@ -113,14 +113,22 @@ RSpec.describe YakFeature do
   describe ".seed_default_features" do
     before do
       YakFeature.where(
-        feature_key: %w[post_highlight post_pin post_boost custom_flair]
+        feature_key: %w[
+          post_highlight
+          post_pin
+          post_boost
+          topic_pin
+          topic_boost
+          custom_flair
+          custom_title
+        ]
       ).delete_all
     end
 
     it "creates all default features" do
       expect { YakFeature.seed_default_features }.to change {
         YakFeature.count
-      }.by(4)
+      }.by(7)
     end
 
     it "adds missing defaults when other features already exist" do
@@ -137,6 +145,10 @@ RSpec.describe YakFeature do
       ).to be_present
       expect(described_class.find_by(feature_key: "post_pin")).to be_present
       expect(described_class.find_by(feature_key: "post_boost")).to be_present
+      expect(described_class.find_by(feature_key: "topic_pin")).to be_present
+      expect(described_class.find_by(feature_key: "topic_boost")).to be_present
+      expect(described_class.find_by(feature_key: "custom_flair")).to be_present
+      expect(described_class.find_by(feature_key: "custom_title")).to be_present
     end
 
     it "creates post_highlight feature" do
@@ -165,9 +177,9 @@ RSpec.describe YakFeature do
       feature = YakFeature.find_by(feature_key: "custom_flair")
 
       expect(feature).to be_present
-      expect(feature.cost).to eq(100)
+      expect(feature.cost).to eq(200)
       expect(feature.category).to eq("user")
-      expect(feature.settings["duration_days"]).to eq(30)
+      expect(feature.settings["duration_hours"]).to eq(720)
     end
 
     it "creates post_boost feature" do

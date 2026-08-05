@@ -1,10 +1,12 @@
 # frozen_string_literal: true
 
 # name: discourse-yaks
-# about: Virtual currency system for Discourse - earn and spend Yaks on premium features
+# about: Non-monetary community currency for earning and spending Yaks on forum perks
 # version: 20260802
 # authors: ducks
 # url: https://github.com/ducks/discourse-yaks
+# required_version: 3.4.0
+# license: GPL-2.0-or-later
 
 enabled_site_setting :yaks_enabled
 
@@ -62,8 +64,6 @@ after_initialize do
         :constraints => StaffConstraint.new
     get "/admin/plugins/yaks/features" => "admin/yaks#features",
         :constraints => StaffConstraint.new
-    post "/admin/plugins/yaks/features" => "admin/yaks#create_feature",
-         :constraints => StaffConstraint.new
     put "/admin/plugins/yaks/features/:id" => "admin/yaks#update_feature",
         :constraints => StaffConstraint.new
     get "/admin/plugins/yaks/earning_rules" => "admin/yaks#earning_rules",
@@ -272,24 +272,18 @@ after_initialize do
 
   # Earning system event hooks
   on(:post_created) do |post, _opts, _user|
-    Rails.logger.info("[Yaks] Post created event fired for post #{post.id}")
     next if post.post_type != Post.types[:regular]
     next if post.deleted_at.present?
     next if post.hidden
     next if !post.user
 
-    Rails.logger.info(
-      "[Yaks] Attempting to award Yaks to user #{post.user.id} for post creation"
+    YakEarningService.award(
+      user: post.user,
+      action_key: "post_created",
+      related_post: post,
+      related_topic: post.topic,
+      event_id: post.id
     )
-    result =
-      YakEarningService.award(
-        user: post.user,
-        action_key: "post_created",
-        related_post: post,
-        related_topic: post.topic,
-        event_id: post.id
-      )
-    Rails.logger.info("[Yaks] Award result: #{result}")
   end
 
   on(:topic_created) do |topic, _opts, _user|

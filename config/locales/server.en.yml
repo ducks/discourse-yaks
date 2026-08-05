@@ -2,9 +2,6 @@ en:
   site_settings:
     yaks_enabled: "Enable the Yaks currency system"
     yaks_earning_enabled: "Allow users to earn Yaks through quality contributions"
-    yaks_min_likes_for_reward: "Minimum likes required for a post to earn Yaks"
-    yaks_max_reward_per_post: "Maximum Yaks that can be earned from a single post"
-    yaks_show_balance_publicly: "Show user Yak balances publicly on profiles"
 
   yaks:
     title: "Yak Management"

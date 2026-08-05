@@ -28,7 +28,7 @@ module Admin
               {
                 id: tx.id,
                 user_id: tx.user_id,
-                username: tx.user.username,
+                username: transaction_username(tx),
                 amount: tx.amount,
                 type: tx.transaction_type,
                 created_at: tx.created_at
@@ -58,7 +58,7 @@ module Admin
           details: "Granted #{amount} Yaks: #{reason}"
         )
 
-        render json: { success: true, new_balance: user.yak_balance }
+        render json: { success: true, new_balance: wallet.reload.balance }
       else
         render json: {
                  success: false,
@@ -90,7 +90,7 @@ module Admin
                    {
                      id: tx.id,
                      user_id: tx.user_id,
-                     username: tx.user.username,
+                     username: transaction_username(tx),
                      amount: tx.amount,
                      type: tx.transaction_type,
                      source: tx.source,
@@ -100,32 +100,6 @@ module Admin
                    }
                  end
              }
-    end
-
-    # Creates a new purchasable feature.
-    #
-    # @returns [JSON] The created feature
-    def create_feature
-      feature =
-        YakFeature.create(
-          feature_key: params.require(:feature_key),
-          feature_name: params.require(:feature_name),
-          description: params[:description],
-          cost: params.require(:cost).to_i,
-          category: params[:category],
-          enabled: params.fetch(:enabled, true),
-          settings: params[:settings] || {}
-        )
-
-      if feature.persisted?
-        render json: { success: true, feature: feature }
-      else
-        render json: {
-                 success: false,
-                 errors: feature.errors.full_messages
-               },
-               status: :unprocessable_entity
-      end
     end
 
     # Lists all features.
@@ -243,6 +217,12 @@ module Admin
                error: e.message
              },
              status: :unprocessable_entity
+    end
+
+    private
+
+    def transaction_username(transaction)
+      transaction.user&.username || "(deleted user)"
     end
   end
 end

@@ -54,13 +54,11 @@ class YakFeature < ActiveRecord::Base
       {
         feature_key: "custom_flair",
         feature_name: "Custom User Flair",
-        description:
-          "Display custom text and color flair next to your username for 30 days",
-        cost: 100,
+        description: "Display custom flair next to your username for 30 days",
+        cost: 200,
         category: "user",
         settings: {
-          duration_days: 30,
-          max_length: 20
+          duration_hours: 720
         }
       },
       {
@@ -74,6 +72,36 @@ class YakFeature < ActiveRecord::Base
           duration_hours: 72
         },
         enabled: false
+      },
+      {
+        feature_key: "topic_pin",
+        feature_name: "Pin Topic",
+        description: "Pin your topic to the top of its category for 24 hours",
+        cost: 100,
+        category: "topic",
+        settings: {
+          duration_hours: 24
+        }
+      },
+      {
+        feature_key: "topic_boost",
+        feature_name: "Boost Topic",
+        description: "Pin your topic globally with visual highlighting",
+        cost: 150,
+        category: "topic",
+        settings: {
+          duration_hours: 72
+        }
+      },
+      {
+        feature_key: "custom_title",
+        feature_name: "Custom User Title",
+        description: "Set a custom title displayed next to your username",
+        cost: 150,
+        category: "user",
+        settings: {
+          duration_hours: 720
+        }
       }
     ]
 

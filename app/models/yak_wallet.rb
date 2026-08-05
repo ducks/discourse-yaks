@@ -15,7 +15,7 @@ class YakWallet < ActiveRecord::Base
   # Credits Yaks to the wallet with transaction logging.
   #
   # @param amount [Integer] The number of Yaks to add (must be positive)
-  # @param source [String] The source of the Yaks (e.g., 'stripe_purchase', 'quality_post')
+  # @param source [String] The source of the Yaks (e.g., 'admin', 'earning_post_created')
   # @param description [String] Human-readable description of the transaction
   # @param metadata [Hash] Additional data to store with the transaction
   # @returns [YakTransaction, nil] The created transaction or nil if failed

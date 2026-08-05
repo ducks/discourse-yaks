@@ -59,6 +59,18 @@ export default class YaksManagementTables extends Component {
     }
   }
 
+  featureDuration(feature) {
+    if (feature.settings?.duration_hours) {
+      return `${feature.settings.duration_hours} ${i18n("yaks.admin.features.hours")}`;
+    }
+
+    if (feature.settings?.duration_days) {
+      return `${feature.settings.duration_days} ${i18n("yaks.admin.features.days")}`;
+    }
+
+    return i18n("yaks.admin.features.permanent");
+  }
+
   <template>
     {{yield}}
 
@@ -105,8 +117,7 @@ export default class YaksManagementTables extends Component {
                   <small>{{feature.description}}</small>
                 </td>
                 <td>{{feature.cost}} {{i18n "yaks.admin.features.yaks"}}</td>
-                <td>{{feature.duration_hours}}
-                  {{i18n "yaks.admin.features.hours"}}</td>
+                <td>{{this.featureDuration feature}}</td>
                 <td>{{feature.category}}</td>
                 <td>{{if
                     feature.enabled

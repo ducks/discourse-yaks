@@ -5,6 +5,3 @@ plugins:
   yaks_earning_enabled:
     default: true
     client: true
-  yaks_show_balance_publicly:
-    default: false
-    client: true
