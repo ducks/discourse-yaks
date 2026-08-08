@@ -17,6 +17,7 @@ export default class YaksManagementTables extends Component {
   @tracked stats = null;
   @tracked features = [];
   @tracked earningRules = [];
+  @tracked economy = null;
   @tracked loading = true;
 
   constructor() {
@@ -29,10 +30,12 @@ export default class YaksManagementTables extends Component {
       const statsData = await ajax("/admin/plugins/yaks/stats");
       const featuresData = await ajax("/admin/plugins/yaks/features");
       const earningRulesData = await ajax("/admin/plugins/yaks/earning_rules");
+      const economyData = await ajax("/admin/plugins/yaks/economy");
 
       this.stats = statsData;
       this.features = featuresData.features;
       this.earningRules = earningRulesData.earning_rules;
+      this.economy = economyData;
     } catch (error) {
       popupAjaxError(error);
     } finally {
@@ -113,6 +116,89 @@ export default class YaksManagementTables extends Component {
             </tr>
           </tbody>
         </table>
+
+        <h2>{{i18n
+            "yaks.admin.economy.title"
+            days=this.economy.period_days
+          }}</h2>
+        <table class="yaks-stats-table">
+          <tbody>
+            <tr>
+              <th>{{i18n "yaks.admin.economy.issued"}}</th>
+              <td>{{this.economy.period.issued}}</td>
+            </tr>
+            <tr>
+              <th>{{i18n "yaks.admin.economy.removed"}}</th>
+              <td>{{this.economy.period.removed}}</td>
+            </tr>
+            <tr>
+              <th>{{i18n "yaks.admin.economy.net"}}</th>
+              <td>{{this.economy.period.net}}</td>
+            </tr>
+            <tr>
+              <th>{{i18n "yaks.admin.economy.holders"}}</th>
+              <td>{{this.economy.holder_count}}</td>
+            </tr>
+            <tr>
+              <th>{{i18n "yaks.admin.economy.supply_difference"}}</th>
+              <td>{{this.economy.supply_difference}}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="yaks-economy-breakdowns">
+          <div>
+            <h3>{{i18n "yaks.admin.economy.sources"}}</h3>
+            <table class="yaks-stats-table">
+              <thead>
+                <tr>
+                  <th>{{i18n "yaks.admin.economy.source"}}</th>
+                  <th>{{i18n "yaks.admin.economy.amount"}}</th>
+                  <th>{{i18n "yaks.admin.economy.events"}}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{#each this.economy.sources as |source|}}
+                  <tr>
+                    <td>{{source.source}}</td>
+                    <td>{{source.amount}}</td>
+                    <td>{{source.count}}</td>
+                  </tr>
+                {{else}}
+                  <tr><td colspan="3">{{i18n
+                        "yaks.admin.economy.none"
+                      }}</td></tr>
+                {{/each}}
+              </tbody>
+            </table>
+          </div>
+
+          <div>
+            <h3>{{i18n "yaks.admin.economy.sinks"}}</h3>
+            <table class="yaks-stats-table">
+              <thead>
+                <tr>
+                  <th>{{i18n "yaks.admin.economy.source"}}</th>
+                  <th>{{i18n "yaks.admin.economy.amount"}}</th>
+                  <th>{{i18n "yaks.admin.economy.events"}}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{#each this.economy.sinks as |sink|}}
+                  <tr>
+                    <td>{{sink.source}}</td>
+                    <td>{{sink.amount}}</td>
+                    <td>{{sink.count}}</td>
+                  </tr>
+                {{else}}
+                  <tr><td colspan="3">{{i18n
+                        "yaks.admin.economy.none"
+                      }}</td></tr>
+                {{/each}}
+              </tbody>
+            </table>
+          </div>
+        </div>
 
         <h2>{{i18n "yaks.admin.features.title"}}</h2>
         <table class="yaks-features-table">

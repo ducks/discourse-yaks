@@ -50,6 +50,7 @@ after_initialize do
   require_relative "app/jobs/scheduled/cleanup_expired_yak_features"
   require_relative "app/services/yak_earning_service"
   require_relative "app/services/yak_ledger_reconciler"
+  require_relative "app/services/yak_economy_report"
   require_relative "app/models/yak_earning_rule"
 
   Discourse::Application.routes.append do
@@ -58,6 +59,7 @@ after_initialize do
     post "/yaks/spend" => "yaks#spend"
 
     get "/admin/plugins/yaks/stats" => "admin/yaks#stats", :constraints => StaffConstraint.new
+    get "/admin/plugins/yaks/economy" => "admin/yaks#economy", :constraints => StaffConstraint.new
     post "/admin/plugins/yaks/give" => "admin/yaks#give_yaks", :constraints => StaffConstraint.new
     post "/admin/plugins/yaks/adjust" => "admin/yaks#adjust_balance",
          :constraints => StaffConstraint.new
