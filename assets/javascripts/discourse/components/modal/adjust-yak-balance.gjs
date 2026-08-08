@@ -8,6 +8,7 @@ import DModal from "discourse/components/d-modal";
 import { ajax } from "discourse/lib/ajax";
 import { popupAjaxError } from "discourse/lib/ajax-error";
 import UserChooser from "discourse/select-kit/components/user-chooser";
+import { not, or } from "discourse/truth-helpers";
 import { i18n } from "discourse-i18n";
 
 export default class AdjustYakBalanceModal extends Component {
