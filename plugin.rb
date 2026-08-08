@@ -2,7 +2,7 @@
 
 # name: discourse-yaks
 # about: Non-monetary community currency for earning and spending Yaks on forum perks
-# version: 20260802
+# version: 20260808
 # authors: ducks
 # url: https://github.com/ducks/discourse-yaks
 # required_version: 3.4.0
