@@ -13,7 +13,7 @@ class YakTransaction < ActiveRecord::Base
   validates :transaction_type,
             presence: true,
             inclusion: {
-              in: %w[purchase earn spend refund admin]
+              in: %w[purchase earn spend refund admin],
             }
   validates :user_id, presence: true
   validates :yak_wallet_id, presence: true
@@ -38,3 +38,29 @@ class YakTransaction < ActiveRecord::Base
     amount.negative?
   end
 end
+
+# == Schema Information
+#
+# Table name: yak_transactions
+#
+#  id               :bigint           not null, primary key
+#  amount           :integer          not null
+#  description      :text
+#  metadata         :jsonb
+#  source           :string(100)
+#  transaction_type :string(50)       not null
+#  created_at       :datetime         not null
+#  updated_at       :datetime         not null
+#  related_post_id  :integer
+#  related_topic_id :integer
+#  user_id          :integer          not null
+#  yak_wallet_id    :integer          not null
+#
+# Indexes
+#
+#  index_yak_transactions_on_created_at        (created_at)
+#  index_yak_transactions_on_related_post_id   (related_post_id)
+#  index_yak_transactions_on_transaction_type  (transaction_type)
+#  index_yak_transactions_on_user_id           (user_id)
+#  index_yak_transactions_on_yak_wallet_id     (yak_wallet_id)
+#

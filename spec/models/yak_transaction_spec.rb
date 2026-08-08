@@ -13,15 +13,13 @@ RSpec.describe YakTransaction do
     it { should validate_presence_of(:transaction_type) }
 
     it "validates amount is not zero" do
-      transaction =
-        YakTransaction.new(user: user, yak_wallet: wallet, amount: 0)
+      transaction = YakTransaction.new(user: user, yak_wallet: wallet, amount: 0)
       expect(transaction).not_to be_valid
       expect(transaction.errors[:amount]).to be_present
     end
 
     it "validates transaction_type is valid" do
-      transaction =
-        YakTransaction.new(user: user, yak_wallet: wallet, amount: 10)
+      transaction = YakTransaction.new(user: user, yak_wallet: wallet, amount: 10)
 
       transaction.transaction_type = "purchase"
       expect(transaction).to be_valid
@@ -52,36 +50,21 @@ RSpec.describe YakTransaction do
 
   describe "scopes" do
     let!(:credit1) do
-      YakTransaction.create!(
-        user: user,
-        yak_wallet: wallet,
-        amount: 100,
-        transaction_type: "earn"
-      )
+      YakTransaction.create!(user: user, yak_wallet: wallet, amount: 100, transaction_type: "earn")
     end
     let!(:credit2) do
       YakTransaction.create!(
         user: user,
         yak_wallet: wallet,
         amount: 50,
-        transaction_type: "purchase"
+        transaction_type: "purchase",
       )
     end
     let!(:debit1) do
-      YakTransaction.create!(
-        user: user,
-        yak_wallet: wallet,
-        amount: -25,
-        transaction_type: "spend"
-      )
+      YakTransaction.create!(user: user, yak_wallet: wallet, amount: -25, transaction_type: "spend")
     end
     let!(:debit2) do
-      YakTransaction.create!(
-        user: user,
-        yak_wallet: wallet,
-        amount: -10,
-        transaction_type: "spend"
-      )
+      YakTransaction.create!(user: user, yak_wallet: wallet, amount: -10, transaction_type: "spend")
     end
 
     describe ".credits" do
@@ -105,10 +88,7 @@ RSpec.describe YakTransaction do
 
     describe ".by_type" do
       it "filters by transaction type" do
-        expect(YakTransaction.by_type("spend")).to contain_exactly(
-          debit1,
-          debit2
-        )
+        expect(YakTransaction.by_type("spend")).to contain_exactly(debit1, debit2)
         expect(YakTransaction.by_type("earn")).to contain_exactly(credit1)
       end
     end
@@ -122,18 +102,16 @@ RSpec.describe YakTransaction do
             user: other_user,
             yak_wallet: other_wallet,
             amount: 100,
-            transaction_type: "earn"
+            transaction_type: "earn",
           )
 
         expect(YakTransaction.for_user(user.id)).to contain_exactly(
           credit1,
           credit2,
           debit1,
-          debit2
+          debit2,
         )
-        expect(YakTransaction.for_user(other_user.id)).to contain_exactly(
-          other_tx
-        )
+        expect(YakTransaction.for_user(other_user.id)).to contain_exactly(other_tx)
       end
     end
   end
@@ -141,23 +119,13 @@ RSpec.describe YakTransaction do
   describe "#credit?" do
     it "returns true for positive amounts" do
       transaction =
-        YakTransaction.new(
-          user: user,
-          yak_wallet: wallet,
-          amount: 100,
-          transaction_type: "earn"
-        )
+        YakTransaction.new(user: user, yak_wallet: wallet, amount: 100, transaction_type: "earn")
       expect(transaction.credit?).to be true
     end
 
     it "returns false for negative amounts" do
       transaction =
-        YakTransaction.new(
-          user: user,
-          yak_wallet: wallet,
-          amount: -50,
-          transaction_type: "spend"
-        )
+        YakTransaction.new(user: user, yak_wallet: wallet, amount: -50, transaction_type: "spend")
       expect(transaction.credit?).to be false
     end
   end
@@ -165,23 +133,13 @@ RSpec.describe YakTransaction do
   describe "#debit?" do
     it "returns true for negative amounts" do
       transaction =
-        YakTransaction.new(
-          user: user,
-          yak_wallet: wallet,
-          amount: -50,
-          transaction_type: "spend"
-        )
+        YakTransaction.new(user: user, yak_wallet: wallet, amount: -50, transaction_type: "spend")
       expect(transaction.debit?).to be true
     end
 
     it "returns false for positive amounts" do
       transaction =
-        YakTransaction.new(
-          user: user,
-          yak_wallet: wallet,
-          amount: 100,
-          transaction_type: "earn"
-        )
+        YakTransaction.new(user: user, yak_wallet: wallet, amount: 100, transaction_type: "earn")
       expect(transaction.debit?).to be false
     end
   end

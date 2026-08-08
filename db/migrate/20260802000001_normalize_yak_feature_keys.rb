@@ -5,18 +5,18 @@ class NormalizeYakFeatureKeys < ActiveRecord::Migration[7.0]
     "highlight" => {
       key: "post_highlight",
       cost: 25,
-      settings: '{"default_color":"gold","duration":null}'
+      settings: '{"default_color":"gold","duration":null}',
     },
     "pin" => {
       key: "post_pin",
       cost: 50,
-      settings: '{"duration_hours":24}'
+      settings: '{"duration_hours":24}',
     },
     "boost" => {
       key: "post_boost",
       cost: 30,
-      settings: '{"duration_hours":72}'
-    }
+      settings: '{"duration_hours":72}',
+    },
   }.freeze
 
   def up

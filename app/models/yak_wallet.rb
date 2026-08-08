@@ -35,7 +35,7 @@ class YakWallet < ActiveRecord::Base
         description: description,
         metadata: metadata,
         related_post_id: metadata[:related_post_id],
-        related_topic_id: metadata[:related_topic_id]
+        related_topic_id: metadata[:related_topic_id],
       )
     end
   rescue ActiveRecord::RecordInvalid
@@ -68,7 +68,7 @@ class YakWallet < ActiveRecord::Base
         description: description,
         metadata: options[:metadata] || {},
         related_post_id: options[:related_post_id],
-        related_topic_id: options[:related_topic_id]
+        related_topic_id: options[:related_topic_id],
       )
     end
   rescue ActiveRecord::RecordInvalid
@@ -98,8 +98,8 @@ class YakWallet < ActiveRecord::Base
         source: "refund_#{transaction.id}",
         description: reason,
         metadata: {
-          original_transaction_id: transaction.id
-        }
+          original_transaction_id: transaction.id,
+        },
       )
     end
   rescue ActiveRecord::RecordInvalid
@@ -114,3 +114,20 @@ class YakWallet < ActiveRecord::Base
     find_or_create_by!(user_id: user.id)
   end
 end
+
+# == Schema Information
+#
+# Table name: yak_wallets
+#
+#  id              :bigint           not null, primary key
+#  balance         :integer          default(0), not null
+#  lifetime_earned :integer          default(0), not null
+#  lifetime_spent  :integer          default(0), not null
+#  created_at      :datetime         not null
+#  updated_at      :datetime         not null
+#  user_id         :integer          not null
+#
+# Indexes
+#
+#  index_yak_wallets_on_user_id  (user_id) UNIQUE
+#

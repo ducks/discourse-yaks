@@ -13,20 +13,8 @@ RSpec.describe Jobs::CleanupExpiredYakFeatures do
 
   describe "#execute" do
     it "expires multiple expired features" do
-      transaction1 =
-        wallet.spend_yaks(
-          25,
-          "post_highlight",
-          "Test 1",
-          related_post_id: post1.id
-        )
-      transaction2 =
-        wallet.spend_yaks(
-          25,
-          "post_highlight",
-          "Test 2",
-          related_post_id: post2.id
-        )
+      transaction1 = wallet.spend_yaks(25, "post_highlight", "Test 1", related_post_id: post1.id)
+      transaction2 = wallet.spend_yaks(25, "post_highlight", "Test 2", related_post_id: post2.id)
 
       feature_use1 =
         YakFeatureUse.create!(
@@ -36,8 +24,8 @@ RSpec.describe Jobs::CleanupExpiredYakFeatures do
           related_post: post1,
           expires_at: 1.hour.ago,
           feature_data: {
-            color: "gold"
-          }
+            color: "gold",
+          },
         )
 
       feature_use2 =
@@ -48,22 +36,22 @@ RSpec.describe Jobs::CleanupExpiredYakFeatures do
           related_post: post2,
           expires_at: 2.hours.ago,
           feature_data: {
-            color: "blue"
-          }
+            color: "blue",
+          },
         )
 
       post1.custom_fields["yak_features"] = {
         "highlight" => {
           "enabled" => true,
-          "color" => "gold"
-        }
+          "color" => "gold",
+        },
       }
       post1.save_custom_fields
       post2.custom_fields["yak_features"] = {
         "highlight" => {
           "enabled" => true,
-          "color" => "blue"
-        }
+          "color" => "blue",
+        },
       }
       post2.save_custom_fields
 
@@ -76,13 +64,7 @@ RSpec.describe Jobs::CleanupExpiredYakFeatures do
     end
 
     it "does not expire features that have not expired yet" do
-      transaction =
-        wallet.spend_yaks(
-          25,
-          "post_highlight",
-          "Test",
-          related_post_id: post1.id
-        )
+      transaction = wallet.spend_yaks(25, "post_highlight", "Test", related_post_id: post1.id)
 
       feature_use =
         YakFeatureUse.create!(
@@ -92,8 +74,8 @@ RSpec.describe Jobs::CleanupExpiredYakFeatures do
           related_post: post1,
           expires_at: 1.hour.from_now,
           feature_data: {
-            color: "gold"
-          }
+            color: "gold",
+          },
         )
 
       described_class.new.execute({})
@@ -102,13 +84,7 @@ RSpec.describe Jobs::CleanupExpiredYakFeatures do
     end
 
     it "does not expire features that have already been processed" do
-      transaction =
-        wallet.spend_yaks(
-          25,
-          "post_highlight",
-          "Test",
-          related_post_id: post1.id
-        )
+      transaction = wallet.spend_yaks(25, "post_highlight", "Test", related_post_id: post1.id)
 
       feature_use =
         YakFeatureUse.create!(
@@ -119,36 +95,28 @@ RSpec.describe Jobs::CleanupExpiredYakFeatures do
           expires_at: 1.hour.ago,
           processed_at: Time.zone.now,
           feature_data: {
-            color: "gold"
-          }
+            color: "gold",
+          },
         )
 
       post1.custom_fields["yak_features"] = {
         "highlight" => {
           "enabled" => true,
-          "color" => "gold"
-        }
+          "color" => "gold",
+        },
       }
       post1.save_custom_fields
 
       described_class.new.execute({})
 
       # Should still have highlight
-      expect(
-        post1.reload.custom_fields["yak_features"]["highlight"]
-      ).to be_present
+      expect(post1.reload.custom_fields["yak_features"]["highlight"]).to be_present
     end
 
     it "does nothing if yaks is disabled" do
       SiteSetting.yaks_enabled = false
 
-      transaction =
-        wallet.spend_yaks(
-          25,
-          "post_highlight",
-          "Test",
-          related_post_id: post1.id
-        )
+      transaction = wallet.spend_yaks(25, "post_highlight", "Test", related_post_id: post1.id)
 
       feature_use =
         YakFeatureUse.create!(
@@ -158,8 +126,8 @@ RSpec.describe Jobs::CleanupExpiredYakFeatures do
           related_post: post1,
           expires_at: 1.hour.ago,
           feature_data: {
-            color: "gold"
-          }
+            color: "gold",
+          },
         )
 
       described_class.new.execute({})
@@ -168,20 +136,8 @@ RSpec.describe Jobs::CleanupExpiredYakFeatures do
     end
 
     it "continues processing if one feature fails" do
-      transaction1 =
-        wallet.spend_yaks(
-          25,
-          "post_highlight",
-          "Test 1",
-          related_post_id: post1.id
-        )
-      transaction2 =
-        wallet.spend_yaks(
-          25,
-          "post_highlight",
-          "Test 2",
-          related_post_id: post2.id
-        )
+      transaction1 = wallet.spend_yaks(25, "post_highlight", "Test 1", related_post_id: post1.id)
+      transaction2 = wallet.spend_yaks(25, "post_highlight", "Test 2", related_post_id: post2.id)
 
       feature_use1 =
         YakFeatureUse.create!(
@@ -191,8 +147,8 @@ RSpec.describe Jobs::CleanupExpiredYakFeatures do
           related_post: post1,
           expires_at: 1.hour.ago,
           feature_data: {
-            color: "gold"
-          }
+            color: "gold",
+          },
         )
 
       feature_use2 =
@@ -203,24 +159,25 @@ RSpec.describe Jobs::CleanupExpiredYakFeatures do
           related_post: post2,
           expires_at: 1.hour.ago,
           feature_data: {
-            color: "blue"
-          }
+            color: "blue",
+          },
         )
 
       post2.custom_fields["yak_features"] = {
         "highlight" => {
           "enabled" => true,
-          "color" => "blue"
-        }
+          "color" => "blue",
+        },
       }
       post2.save_custom_fields
 
       # Make first one fail
+      allow(YakFeatureService).to receive(:remove_feature_effects).with(feature_use1).and_raise(
+        StandardError,
+        "Test error",
+      )
       allow(YakFeatureService).to receive(:remove_feature_effects).with(
-        feature_use1
-      ).and_raise(StandardError, "Test error")
-      allow(YakFeatureService).to receive(:remove_feature_effects).with(
-        feature_use2
+        feature_use2,
       ).and_call_original
 
       described_class.new.execute({})
