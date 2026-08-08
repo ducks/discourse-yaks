@@ -49,6 +49,7 @@ after_initialize do
   require_relative "app/jobs/regular/expire_yak_feature"
   require_relative "app/jobs/scheduled/cleanup_expired_yak_features"
   require_relative "app/services/yak_earning_service"
+  require_relative "app/services/yak_ledger_reconciler"
   require_relative "app/models/yak_earning_rule"
 
   Discourse::Application.routes.append do
