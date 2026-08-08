@@ -161,6 +161,56 @@ RSpec.describe YaksController do
       expect(user.reload.yak_balance).to eq(40)
     end
 
+    it "applies a signed staff adjustment with an audit transaction" do
+      YakWallet.for_user(user).add_yaks(50, "test", "Initial balance")
+
+      post "/admin/plugins/yaks/adjust.json",
+           params: {
+             username: user.username,
+             amount: -20,
+             reason: "Duplicate award",
+           }
+
+      expect(response.status).to eq(200)
+      expect(response.parsed_body).to include(
+        "success" => true,
+        "adjustment" => -20,
+        "old_balance" => 50,
+        "new_balance" => 30,
+      )
+      expect(user.reload.yak_balance).to eq(30)
+      expect(YakTransaction.last).to have_attributes(
+        amount: -20,
+        transaction_type: "admin",
+        description: "Duplicate award",
+      )
+    end
+
+    it "rejects a staff adjustment that exceeds the available balance" do
+      post "/admin/plugins/yaks/adjust.json",
+           params: {
+             username: user.username,
+             amount: -1,
+             reason: "Correction",
+           }
+
+      expect(response.status).to eq(422)
+      expect(YakWallet.find_by!(user: user).balance).to eq(0)
+      expect(YakTransaction.where(transaction_type: "admin")).to be_empty
+    end
+
+    it "requires a reason for staff adjustments" do
+      post "/admin/plugins/yaks/adjust.json",
+           params: {
+             username: user.username,
+             amount: 10,
+             reason: "",
+           }
+
+      expect(response.status).to eq(422)
+      expect(YakTransaction.where(transaction_type: "admin")).to be_empty
+    end
+
     it "does not expose creation of unsupported feature keys" do
       expect {
         post "/admin/plugins/yaks/features.json",

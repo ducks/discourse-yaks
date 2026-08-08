@@ -104,3 +104,11 @@ en:
           min_trust_level: "Min Trust Level"
           enabled: "Enabled"
           no_cap: "No limit"
+        adjustment:
+          title: "Adjust Yak balance"
+          open: "Adjust member balance"
+          member: "Member"
+          amount: "Adjustment"
+          amount_help: "Use a positive number to issue Yaks or a negative number to remove them."
+          reason: "Reason"
+          submit: "Apply adjustment"

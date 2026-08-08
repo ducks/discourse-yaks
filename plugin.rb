@@ -58,6 +58,8 @@ after_initialize do
 
     get "/admin/plugins/yaks/stats" => "admin/yaks#stats", :constraints => StaffConstraint.new
     post "/admin/plugins/yaks/give" => "admin/yaks#give_yaks", :constraints => StaffConstraint.new
+    post "/admin/plugins/yaks/adjust" => "admin/yaks#adjust_balance",
+         :constraints => StaffConstraint.new
     get "/admin/plugins/yaks/transactions" => "admin/yaks#transactions",
         :constraints => StaffConstraint.new
     get "/admin/plugins/yaks/features" => "admin/yaks#features", :constraints => StaffConstraint.new
