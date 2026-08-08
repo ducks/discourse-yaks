@@ -85,8 +85,12 @@ class YakWallet < ActiveRecord::Base
     return nil if transaction.amount >= 0 # Only refund debit transactions
 
     refund_amount = transaction.amount.abs
+    refund_source = "refund_#{transaction.id}"
 
     transaction do
+      lock!
+      return nil if yak_transactions.exists?(transaction_type: "refund", source: refund_source)
+
       increment!(:balance, refund_amount)
       decrement!(:lifetime_spent, refund_amount)
       user.increment!(:yak_balance, refund_amount)
@@ -95,7 +99,7 @@ class YakWallet < ActiveRecord::Base
         user_id: user_id,
         amount: refund_amount,
         transaction_type: "refund",
-        source: "refund_#{transaction.id}",
+        source: refund_source,
         description: reason,
         metadata: {
           original_transaction_id: transaction.id,

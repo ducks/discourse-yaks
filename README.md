@@ -42,7 +42,7 @@ The plugin declares Discourse 3.4.0 as its minimum version. Alpha development an
 
 ## How it works
 
-Earning events are idempotent and serialized per wallet. Each earning rule can require a trust level and content length and can cap the number of rewarded events per day.
+Earning events are idempotent and serialized per wallet. Each earning rule can require a trust level and content length and can cap the number of rewarded events per day. A new topic is rewarded only through the topic rule; its first post does not also receive the ordinary post reward.
 
 Spending is performed inside database transactions with wallet and target locking. The server owns feature prices, validates target ownership and visibility, allowlists feature options, and prevents concurrent duplicate applications. Temporary effects are removed by scheduled jobs. Topic expiration restores the prior pin state when it has not subsequently been changed by staff.
 
