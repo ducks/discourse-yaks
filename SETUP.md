@@ -27,4 +27,20 @@ For a manual smoke test:
 6. Verify another member cannot apply a perk to that content.
 7. Shorten a perk duration in development and confirm its effect expires cleanly.
 
+## Ledger reconciliation
+
+Audit materialized wallet balances, lifetime totals, and the cached user balance against the
+transaction ledger without changing data:
+
+```bash
+LOAD_PLUGINS=1 bin/rake yaks:reconcile
+```
+
+Review the reported discrepancies before applying repairs. Repair mode uses the transaction ledger
+as the source of truth and resets stale user caches that have no wallet:
+
+```bash
+LOAD_PLUGINS=1 bin/rake "yaks:reconcile[repair]"
+```
+
 The endpoints used by the UI are listed in the README. They are intentionally unstable during alpha.

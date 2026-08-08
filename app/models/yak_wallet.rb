@@ -23,6 +23,7 @@ class YakWallet < ActiveRecord::Base
     return nil if amount <= 0
 
     transaction do
+      lock!
       increment!(:balance, amount)
       increment!(:lifetime_earned, amount)
       user.increment!(:yak_balance, amount)
