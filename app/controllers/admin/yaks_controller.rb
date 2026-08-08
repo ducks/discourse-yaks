@@ -67,6 +67,54 @@ module Admin
       end
     end
 
+    # Applies a signed, audited balance correction for a member.
+    def adjust_balance
+      user = User.find_by_username(params.require(:username))
+      return render json: { error: "User not found" }, status: :not_found unless user
+
+      amount = Integer(params.require(:amount).to_s, 10)
+      reason = params[:reason].to_s.strip
+      if amount.zero? || reason.blank?
+        return(
+          render json: {
+                   error: "Amount must be non-zero and reason is required",
+                 },
+                 status: :unprocessable_entity
+        )
+      end
+
+      wallet = YakWallet.for_user(user)
+      old_balance = wallet.balance
+      transaction = wallet.adjust_balance(amount, reason: reason, admin_id: current_user.id)
+      unless transaction
+        return(
+          render json: {
+                   error: "Adjustment would make the balance negative",
+                 },
+                 status: :unprocessable_entity
+        )
+      end
+
+      new_balance = wallet.reload.balance
+      StaffActionLogger.new(current_user).log_custom(
+        "yaks_balance_adjusted",
+        user_id: user.id,
+        details: "Adjusted by #{amount} Yaks (#{old_balance} → #{new_balance}): #{reason}",
+      )
+      MessageBus.publish("/yak-balance/#{user.id}", { balance: new_balance }, user_ids: [user.id])
+
+      render json: {
+               success: true,
+               username: user.username,
+               adjustment: amount,
+               old_balance: old_balance,
+               new_balance: new_balance,
+               transaction_id: transaction.id,
+             }
+    rescue ArgumentError
+      render json: { error: "Amount must be an integer" }, status: :unprocessable_entity
+    end
+
     # Lists all transactions with filtering.
     #
     # @returns [JSON] Filtered transaction list

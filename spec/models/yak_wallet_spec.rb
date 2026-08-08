@@ -226,4 +226,44 @@ RSpec.describe YakWallet do
       expect(wallet.refund_transaction(earn_transaction, "Test")).to be_nil
     end
   end
+
+  describe "#adjust_balance" do
+    it "records positive staff issuance without changing lifetime earned" do
+      transaction = nil
+
+      expect {
+        transaction = wallet.adjust_balance(40, reason: "Contest correction", admin_id: 123)
+      }.to change { wallet.reload.balance }.by(40).and change { user.reload.yak_balance }.by(40)
+
+      expect(wallet.lifetime_earned).to eq(0)
+      expect(transaction).to have_attributes(
+        amount: 40,
+        transaction_type: "admin",
+        source: "admin_adjustment",
+        description: "Contest correction",
+      )
+      expect(transaction.metadata["admin_id"]).to eq(123)
+    end
+
+    it "removes Yaks without changing lifetime spent" do
+      wallet.add_yaks(50, "test", "Initial balance")
+
+      expect { wallet.adjust_balance(-20, reason: "Duplicate award", admin_id: 123) }.to change {
+        wallet.reload.balance
+      }.by(-20).and change { user.reload.yak_balance }.by(-20)
+
+      expect(wallet.lifetime_spent).to eq(0)
+    end
+
+    it "rejects an adjustment that would make the balance negative" do
+      expect {
+        expect(wallet.adjust_balance(-1, reason: "Invalid correction", admin_id: 123)).to be_nil
+      }.not_to change { [wallet.reload.balance, wallet.yak_transactions.count] }
+    end
+
+    it "requires a non-zero amount and reason" do
+      expect(wallet.adjust_balance(0, reason: "Correction", admin_id: 123)).to be_nil
+      expect(wallet.adjust_balance(1, reason: "", admin_id: 123)).to be_nil
+    end
+  end
 end

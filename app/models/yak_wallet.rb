@@ -110,6 +110,33 @@ class YakWallet < ActiveRecord::Base
     nil
   end
 
+  # Applies a signed staff adjustment without changing participation totals.
+  # Positive amounts issue Yaks and negative amounts remove them.
+  def adjust_balance(amount, reason:, admin_id:)
+    return nil if amount.zero? || reason.blank?
+
+    transaction do
+      lock!
+      return nil if balance + amount < 0
+
+      increment!(:balance, amount)
+      user.increment!(:yak_balance, amount)
+
+      yak_transactions.create!(
+        user_id: user_id,
+        amount: amount,
+        transaction_type: "admin",
+        source: "admin_adjustment",
+        description: reason,
+        metadata: {
+          admin_id: admin_id,
+        },
+      )
+    end
+  rescue ActiveRecord::RecordInvalid, ActiveModel::RangeError
+    nil
+  end
+
   # Finds or creates a wallet for a user.
   #
   # @param user [User] The user to find or create a wallet for

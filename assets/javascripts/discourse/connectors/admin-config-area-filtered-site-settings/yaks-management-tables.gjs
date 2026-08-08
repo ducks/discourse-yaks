@@ -7,6 +7,7 @@ import DButton from "discourse/components/d-button";
 import { ajax } from "discourse/lib/ajax";
 import { popupAjaxError } from "discourse/lib/ajax-error";
 import { i18n } from "discourse-i18n";
+import AdjustYakBalanceModal from "../../components/modal/adjust-yak-balance";
 import EditYakEarningRuleModal from "../../components/modal/edit-yak-earning-rule";
 import EditYakFeatureModal from "../../components/modal/edit-yak-feature";
 
@@ -59,6 +60,14 @@ export default class YaksManagementTables extends Component {
     }
   }
 
+  @action
+  async adjustBalance() {
+    const result = await this.modal.show(AdjustYakBalanceModal);
+    if (result) {
+      await this.loadData();
+    }
+  }
+
   featureDuration(feature) {
     if (feature.settings?.duration_hours) {
       return `${feature.settings.duration_hours} ${i18n("yaks.admin.features.hours")}`;
@@ -78,6 +87,15 @@ export default class YaksManagementTables extends Component {
       <div class="spinner"></div>
     {{else}}
       <div class="yaks-management-section">
+        <div class="yaks-management-section__actions">
+          <DButton
+            @action={{this.adjustBalance}}
+            @label="yaks.admin.adjustment.open"
+            @icon="plus"
+            class="btn-primary"
+          />
+        </div>
+
         <h2>{{i18n "yaks.admin.stats.title"}}</h2>
         <table class="yaks-stats-table">
           <tbody>
