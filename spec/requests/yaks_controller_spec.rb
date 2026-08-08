@@ -161,6 +161,29 @@ RSpec.describe YaksController do
       expect(user.reload.yak_balance).to eq(40)
     end
 
+    it "returns the economy source and sink report" do
+      wallet = YakWallet.for_user(user)
+      wallet.add_yaks(40, "earning_post_created", "Recent award")
+      wallet.spend_yaks(10, "post_highlight", "Recent spend")
+
+      get "/admin/plugins/yaks/economy.json", params: { days: 7 }
+
+      expect(response.status).to eq(200)
+      expect(response.parsed_body).to include(
+        "period_days" => 7,
+        "current_supply" => 30,
+        "ledger_supply" => 30,
+        "supply_difference" => 0,
+      )
+      expect(response.parsed_body["period"]).to include("issued" => 40, "removed" => 10)
+    end
+
+    it "rejects an invalid economy reporting period" do
+      get "/admin/plugins/yaks/economy.json", params: { days: 0 }
+
+      expect(response.status).to eq(422)
+    end
+
     it "does not expose creation of unsupported feature keys" do
       expect {
         post "/admin/plugins/yaks/features.json",

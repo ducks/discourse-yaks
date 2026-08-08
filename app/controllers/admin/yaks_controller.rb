@@ -154,6 +154,14 @@ module Admin
              }
     end
 
+    # Returns supply, issuance, and removal totals for economy monitoring.
+    def economy
+      days = params[:days].presence || YakEconomyReport::DEFAULT_PERIOD_DAYS
+      render json: YakEconomyReport.generate(days: days)
+    rescue ArgumentError => e
+      render json: { error: e.message }, status: :unprocessable_entity
+    end
+
     # Returns all earning rules.
     #
     # @returns [JSON] All earning rules
