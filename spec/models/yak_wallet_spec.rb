@@ -197,6 +197,21 @@ RSpec.describe YakWallet do
       expect(refund_tx.metadata["original_transaction_id"]).to eq(spend_transaction.id)
     end
 
+    it "does not refund the same transaction twice" do
+      first_refund = wallet.refund_transaction(spend_transaction, "Feature removed")
+      second_refund = nil
+
+      expect {
+        second_refund = wallet.refund_transaction(spend_transaction, "Duplicate refund")
+      }.not_to change {
+        [wallet.reload.balance, wallet.lifetime_spent, wallet.yak_transactions.count]
+      }
+
+      expect(first_refund).to be_present
+      expect(second_refund).to be_nil
+      expect(wallet.yak_transactions.where(transaction_type: "refund").count).to eq(1)
+    end
+
     it "returns nil if transaction doesn't belong to wallet" do
       other_user = Fabricate(:user)
       other_wallet = YakWallet.create!(user: other_user)

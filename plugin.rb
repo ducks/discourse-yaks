@@ -254,6 +254,10 @@ after_initialize do
   # Earning system event hooks
   on(:post_created) do |post, _opts, _user|
     next if post.post_type != Post.types[:regular]
+    # Discourse emits both topic_created and post_created for a topic's first
+    # post. Reward it through the more valuable topic rule only, otherwise a
+    # new topic silently earns both configured amounts.
+    next if post.is_first_post?
     next if post.deleted_at.present?
     next if post.hidden
     next if !post.user
