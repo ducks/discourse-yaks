@@ -51,10 +51,10 @@ end
 #  transaction_type :string(50)       not null
 #  created_at       :datetime         not null
 #  updated_at       :datetime         not null
-#  related_post_id  :integer
-#  related_topic_id :integer
-#  user_id          :integer          not null
-#  yak_wallet_id    :integer          not null
+#  related_post_id  :bigint
+#  related_topic_id :bigint
+#  user_id          :bigint           not null
+#  yak_wallet_id    :bigint           not null
 #
 # Indexes
 #
