@@ -6,17 +6,11 @@ RSpec.describe YakFeatureUse do
   fab!(:user)
   fab!(:yak_feature)
   fab!(:wallet) { Fabricate(:yak_wallet, user: user) }
-  fab!(:transaction) do
-    Fabricate(:yak_transaction, user: user, yak_wallet: wallet)
-  end
+  fab!(:transaction) { Fabricate(:yak_transaction, user: user, yak_wallet: wallet) }
 
   describe "validations" do
     it "validates presence of user_id" do
-      use =
-        YakFeatureUse.new(
-          yak_feature: yak_feature,
-          yak_transaction: transaction
-        )
+      use = YakFeatureUse.new(yak_feature: yak_feature, yak_transaction: transaction)
       expect(use.valid?).to be false
       expect(use.errors[:user_id]).to be_present
     end
@@ -37,31 +31,19 @@ RSpec.describe YakFeatureUse do
   describe "associations" do
     it "belongs to user" do
       use =
-        YakFeatureUse.create!(
-          user: user,
-          yak_feature: yak_feature,
-          yak_transaction: transaction
-        )
+        YakFeatureUse.create!(user: user, yak_feature: yak_feature, yak_transaction: transaction)
       expect(use.user).to eq(user)
     end
 
     it "belongs to yak_feature" do
       use =
-        YakFeatureUse.create!(
-          user: user,
-          yak_feature: yak_feature,
-          yak_transaction: transaction
-        )
+        YakFeatureUse.create!(user: user, yak_feature: yak_feature, yak_transaction: transaction)
       expect(use.yak_feature).to eq(yak_feature)
     end
 
     it "belongs to yak_transaction" do
       use =
-        YakFeatureUse.create!(
-          user: user,
-          yak_feature: yak_feature,
-          yak_transaction: transaction
-        )
+        YakFeatureUse.create!(user: user, yak_feature: yak_feature, yak_transaction: transaction)
       expect(use.yak_transaction).to eq(transaction)
     end
 
@@ -72,7 +54,7 @@ RSpec.describe YakFeatureUse do
           user: user,
           yak_feature: yak_feature,
           yak_transaction: transaction,
-          related_post: post
+          related_post: post,
         )
       expect(use.related_post).to eq(post)
     end
@@ -84,7 +66,7 @@ RSpec.describe YakFeatureUse do
           user: user,
           yak_feature: yak_feature,
           yak_transaction: transaction,
-          related_topic: topic
+          related_topic: topic,
         )
       expect(use.related_topic).to eq(topic)
     end
@@ -96,7 +78,7 @@ RSpec.describe YakFeatureUse do
         user: user,
         yak_feature: yak_feature,
         yak_transaction: transaction,
-        expires_at: nil
+        expires_at: nil,
       )
     end
     let!(:active_temporary) do
@@ -104,7 +86,7 @@ RSpec.describe YakFeatureUse do
         user: user,
         yak_feature: yak_feature,
         yak_transaction: transaction,
-        expires_at: 1.hour.from_now
+        expires_at: 1.hour.from_now,
       )
     end
     let!(:expired_use) do
@@ -112,16 +94,13 @@ RSpec.describe YakFeatureUse do
         user: user,
         yak_feature: yak_feature,
         yak_transaction: transaction,
-        expires_at: 1.hour.ago
+        expires_at: 1.hour.ago,
       )
     end
 
     describe ".active" do
       it "returns non-expired feature uses" do
-        expect(YakFeatureUse.active).to contain_exactly(
-          active_permanent,
-          active_temporary
-        )
+        expect(YakFeatureUse.active).to contain_exactly(active_permanent, active_temporary)
       end
     end
 
@@ -138,7 +117,7 @@ RSpec.describe YakFeatureUse do
           user: user,
           yak_feature: yak_feature,
           yak_transaction: transaction,
-          related_post_id: post.id
+          related_post_id: post.id,
         )
       end
 
@@ -157,40 +136,32 @@ RSpec.describe YakFeatureUse do
         YakFeatureUse.create!(
           user: other_user,
           yak_feature: yak_feature,
-          yak_transaction: other_transaction
+          yak_transaction: other_transaction,
         )
       end
 
       it "filters by user_id" do
         user_uses = YakFeatureUse.for_user(user.id)
-        expect(user_uses).to include(
-          active_permanent,
-          active_temporary,
-          expired_use
-        )
+        expect(user_uses).to include(active_permanent, active_temporary, expired_use)
         expect(user_uses).not_to include(other_use)
       end
     end
 
     describe ".by_feature" do
-      fab!(:other_feature) do
-        Fabricate(:yak_feature, feature_key: "other_feature")
-      end
+      fab!(:other_feature) { Fabricate(:yak_feature, feature_key: "other_feature") }
       let!(:other_feature_use) do
-        YakFeatureUse.create!(
-          user: user,
-          yak_feature: other_feature,
-          yak_transaction: transaction
-        )
+        YakFeatureUse.create!(user: user, yak_feature: other_feature, yak_transaction: transaction)
       end
 
       it "filters by feature_key" do
-        expect(
-          YakFeatureUse.by_feature(yak_feature.feature_key)
-        ).to contain_exactly(active_permanent, active_temporary, expired_use)
-        expect(
-          YakFeatureUse.by_feature(other_feature.feature_key)
-        ).to contain_exactly(other_feature_use)
+        expect(YakFeatureUse.by_feature(yak_feature.feature_key)).to contain_exactly(
+          active_permanent,
+          active_temporary,
+          expired_use,
+        )
+        expect(YakFeatureUse.by_feature(other_feature.feature_key)).to contain_exactly(
+          other_feature_use,
+        )
       end
     end
   end
@@ -202,7 +173,7 @@ RSpec.describe YakFeatureUse do
           user: user,
           yak_feature: yak_feature,
           yak_transaction: transaction,
-          expires_at: nil
+          expires_at: nil,
         )
       expect(use.active?).to be true
     end
@@ -213,7 +184,7 @@ RSpec.describe YakFeatureUse do
           user: user,
           yak_feature: yak_feature,
           yak_transaction: transaction,
-          expires_at: 1.hour.from_now
+          expires_at: 1.hour.from_now,
         )
       expect(use.active?).to be true
     end
@@ -224,7 +195,7 @@ RSpec.describe YakFeatureUse do
           user: user,
           yak_feature: yak_feature,
           yak_transaction: transaction,
-          expires_at: 1.hour.ago
+          expires_at: 1.hour.ago,
         )
       expect(use.active?).to be false
     end
@@ -237,7 +208,7 @@ RSpec.describe YakFeatureUse do
           user: user,
           yak_feature: yak_feature,
           yak_transaction: transaction,
-          expires_at: nil
+          expires_at: nil,
         )
       expect(use.expired?).to be false
     end
@@ -248,7 +219,7 @@ RSpec.describe YakFeatureUse do
           user: user,
           yak_feature: yak_feature,
           yak_transaction: transaction,
-          expires_at: 1.hour.from_now
+          expires_at: 1.hour.from_now,
         )
       expect(use.expired?).to be false
     end
@@ -259,7 +230,7 @@ RSpec.describe YakFeatureUse do
           user: user,
           yak_feature: yak_feature,
           yak_transaction: transaction,
-          expires_at: 1.hour.ago
+          expires_at: 1.hour.ago,
         )
       expect(use.expired?).to be true
     end

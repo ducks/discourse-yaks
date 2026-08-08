@@ -31,14 +31,13 @@ class YakFeature < ActiveRecord::Base
       {
         feature_key: "post_highlight",
         feature_name: "Post Highlighting",
-        description:
-          "Add a colored border and background to your post to make it stand out",
+        description: "Add a colored border and background to your post to make it stand out",
         cost: 25,
         category: "post",
         settings: {
           default_color: "gold",
-          duration: nil
-        }
+          duration: nil,
+        },
       },
       {
         feature_key: "post_pin",
@@ -47,9 +46,9 @@ class YakFeature < ActiveRecord::Base
         cost: 50,
         category: "post",
         settings: {
-          duration_hours: 24
+          duration_hours: 24,
         },
-        enabled: false
+        enabled: false,
       },
       {
         feature_key: "custom_flair",
@@ -58,20 +57,19 @@ class YakFeature < ActiveRecord::Base
         cost: 200,
         category: "user",
         settings: {
-          duration_hours: 720
-        }
+          duration_hours: 720,
+        },
       },
       {
         feature_key: "post_boost",
         feature_name: "Post Boost",
-        description:
-          "Give your post priority in feeds and search results for 72 hours",
+        description: "Give your post priority in feeds and search results for 72 hours",
         cost: 30,
         category: "post",
         settings: {
-          duration_hours: 72
+          duration_hours: 72,
         },
-        enabled: false
+        enabled: false,
       },
       {
         feature_key: "topic_pin",
@@ -80,8 +78,8 @@ class YakFeature < ActiveRecord::Base
         cost: 100,
         category: "topic",
         settings: {
-          duration_hours: 24
-        }
+          duration_hours: 24,
+        },
       },
       {
         feature_key: "topic_boost",
@@ -90,8 +88,8 @@ class YakFeature < ActiveRecord::Base
         cost: 150,
         category: "topic",
         settings: {
-          duration_hours: 72
-        }
+          duration_hours: 72,
+        },
       },
       {
         feature_key: "custom_title",
@@ -100,15 +98,13 @@ class YakFeature < ActiveRecord::Base
         cost: 150,
         category: "user",
         settings: {
-          duration_hours: 720
-        }
-      }
+          duration_hours: 720,
+        },
+      },
     ]
 
     default_features.map do |attrs|
-      create_with(attrs.except(:feature_key)).find_or_create_by!(
-        feature_key: attrs[:feature_key]
-      )
+      create_with(attrs.except(:feature_key)).find_or_create_by!(feature_key: attrs[:feature_key])
     end
   end
 
@@ -120,3 +116,25 @@ class YakFeature < ActiveRecord::Base
     YakWallet.find_by(user_id: user.id)&.balance.to_i >= cost
   end
 end
+
+# == Schema Information
+#
+# Table name: yak_features
+#
+#  id           :bigint           not null, primary key
+#  category     :string(50)
+#  cost         :integer          not null
+#  description  :text
+#  enabled      :boolean          default(TRUE)
+#  feature_key  :string(100)      not null
+#  feature_name :string(200)      not null
+#  settings     :jsonb
+#  created_at   :datetime         not null
+#  updated_at   :datetime         not null
+#
+# Indexes
+#
+#  index_yak_features_on_category     (category)
+#  index_yak_features_on_enabled      (enabled)
+#  index_yak_features_on_feature_key  (feature_key) UNIQUE
+#

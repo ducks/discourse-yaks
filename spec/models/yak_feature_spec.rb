@@ -14,20 +14,14 @@ RSpec.describe YakFeature do
         feature_key: "test_feature",
         feature_name: "Test",
         cost: 10,
-        category: "post"
+        category: "post",
       )
-      duplicate =
-        YakFeature.new(
-          feature_key: "test_feature",
-          feature_name: "Test 2",
-          cost: 20
-        )
+      duplicate = YakFeature.new(feature_key: "test_feature", feature_name: "Test 2", cost: 20)
       expect(duplicate).not_to be_valid
     end
 
     it "validates category is valid" do
-      feature =
-        YakFeature.new(feature_key: "test", feature_name: "Test", cost: 10)
+      feature = YakFeature.new(feature_key: "test", feature_name: "Test", cost: 10)
 
       feature.category = "post"
       expect(feature).to be_valid
@@ -57,7 +51,7 @@ RSpec.describe YakFeature do
         feature_name: "Enabled Post",
         cost: 10,
         category: "post",
-        enabled: true
+        enabled: true,
       )
     end
     let!(:disabled_post) do
@@ -66,7 +60,7 @@ RSpec.describe YakFeature do
         feature_name: "Disabled Post",
         cost: 20,
         category: "post",
-        enabled: false
+        enabled: false,
       )
     end
     let!(:enabled_user) do
@@ -75,7 +69,7 @@ RSpec.describe YakFeature do
         feature_name: "Enabled User",
         cost: 30,
         category: "user",
-        enabled: true
+        enabled: true,
       )
     end
 
@@ -100,10 +94,7 @@ RSpec.describe YakFeature do
 
     describe ".by_category" do
       it "filters by category" do
-        expect(YakFeature.by_category("post")).to include(
-          enabled_post,
-          disabled_post
-        )
+        expect(YakFeature.by_category("post")).to include(enabled_post, disabled_post)
         expect(YakFeature.by_category("user")).to include(enabled_user)
         expect(YakFeature.by_category("post")).not_to include(enabled_user)
       end
@@ -121,28 +112,20 @@ RSpec.describe YakFeature do
           topic_boost
           custom_flair
           custom_title
-        ]
+        ],
       ).delete_all
     end
 
     it "creates all default features" do
-      expect { YakFeature.seed_default_features }.to change {
-        YakFeature.count
-      }.by(7)
+      expect { YakFeature.seed_default_features }.to change { YakFeature.count }.by(7)
     end
 
     it "adds missing defaults when other features already exist" do
-      Fabricate(
-        :yak_feature,
-        feature_key: "unrelated_feature",
-        category: "topic"
-      )
+      Fabricate(:yak_feature, feature_key: "unrelated_feature", category: "topic")
 
       described_class.seed_default_features
 
-      expect(
-        described_class.find_by(feature_key: "post_highlight")
-      ).to be_present
+      expect(described_class.find_by(feature_key: "post_highlight")).to be_present
       expect(described_class.find_by(feature_key: "post_pin")).to be_present
       expect(described_class.find_by(feature_key: "post_boost")).to be_present
       expect(described_class.find_by(feature_key: "topic_pin")).to be_present
@@ -194,9 +177,7 @@ RSpec.describe YakFeature do
 
     it "does not create duplicates if called multiple times" do
       YakFeature.seed_default_features
-      expect { YakFeature.seed_default_features }.not_to change {
-        YakFeature.count
-      }
+      expect { YakFeature.seed_default_features }.not_to change { YakFeature.count }
     end
   end
 
@@ -205,19 +186,14 @@ RSpec.describe YakFeature do
 
     before { YakWallet.for_user(user).add_yaks(50, "test", "Initial balance") }
     let(:cheap_feature) do
-      YakFeature.create!(
-        feature_key: "cheap",
-        feature_name: "Cheap",
-        cost: 25,
-        category: "post"
-      )
+      YakFeature.create!(feature_key: "cheap", feature_name: "Cheap", cost: 25, category: "post")
     end
     let(:expensive_feature) do
       YakFeature.create!(
         feature_key: "expensive",
         feature_name: "Expensive",
         cost: 100,
-        category: "post"
+        category: "post",
       )
     end
 
@@ -231,12 +207,7 @@ RSpec.describe YakFeature do
 
     it "returns true if user has exact amount" do
       exact_feature =
-        YakFeature.create!(
-          feature_key: "exact",
-          feature_name: "Exact",
-          cost: 50,
-          category: "post"
-        )
+        YakFeature.create!(feature_key: "exact", feature_name: "Exact", cost: 50, category: "post")
       expect(exact_feature.affordable_by?(user)).to be true
     end
   end

@@ -31,9 +31,9 @@ class YaksController < ApplicationController
                    description: feature.description,
                    cost: feature.cost,
                    category: feature.category,
-                   settings: feature.settings || {}
+                   settings: feature.settings || {},
                  }
-               end
+               end,
            }
   end
 
@@ -67,21 +67,17 @@ class YaksController < ApplicationController
         related_post: post,
         related_topic: topic,
         feature_data: feature_data_hash,
-        quantity: quantity
+        quantity: quantity,
       )
 
     if result[:success]
       render json: {
                success: true,
                new_balance: result[:new_balance],
-               feature_use_id: result[:feature_use].id
+               feature_use_id: result[:feature_use].id,
              }
     else
-      render json: {
-               success: false,
-               error: result[:error]
-             },
-             status: :unprocessable_entity
+      render json: { success: false, error: result[:error] }, status: :unprocessable_entity
     end
   end
 
@@ -104,7 +100,7 @@ class YaksController < ApplicationController
             type: tx.transaction_type,
             source: tx.source,
             description: tx.description,
-            created_at: tx.created_at
+            created_at: tx.created_at,
           }
         end,
       features:
@@ -116,9 +112,9 @@ class YaksController < ApplicationController
             description: feature.description,
             cost: feature.cost,
             category: feature.category,
-            affordable: feature.affordable_by?(current_user)
+            affordable: feature.affordable_by?(current_user),
           }
-        end
+        end,
     }
   end
 end

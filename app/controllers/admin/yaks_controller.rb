@@ -31,9 +31,9 @@ module Admin
                 username: transaction_username(tx),
                 amount: tx.amount,
                 type: tx.transaction_type,
-                created_at: tx.created_at
+                created_at: tx.created_at,
               }
-            end
+            end,
       }
 
       render json: stats
@@ -48,21 +48,20 @@ module Admin
       reason = params[:reason] || "Admin grant"
 
       wallet = YakWallet.for_user(user)
-      transaction =
-        wallet.add_yaks(amount, "admin", reason, { admin_id: current_user.id })
+      transaction = wallet.add_yaks(amount, "admin", reason, { admin_id: current_user.id })
 
       if transaction
         StaffActionLogger.new(current_user).log_custom(
           "yaks_granted",
           user_id: user.id,
-          details: "Granted #{amount} Yaks: #{reason}"
+          details: "Granted #{amount} Yaks: #{reason}",
         )
 
         render json: { success: true, new_balance: wallet.reload.balance }
       else
         render json: {
                  success: false,
-                 error: "Failed to grant Yaks"
+                 error: "Failed to grant Yaks",
                },
                status: :unprocessable_entity
       end
@@ -72,16 +71,12 @@ module Admin
     #
     # @returns [JSON] Filtered transaction list
     def transactions
-      transactions =
-        YakTransaction.includes(:user).order(created_at: :desc).limit(100)
+      transactions = YakTransaction.includes(:user).order(created_at: :desc).limit(100)
 
-      if params[:user_id]
-        transactions = transactions.where(user_id: params[:user_id])
-      end
+      transactions = transactions.where(user_id: params[:user_id]) if params[:user_id]
 
       if params[:transaction_type]
-        transactions =
-          transactions.where(transaction_type: params[:transaction_type])
+        transactions = transactions.where(transaction_type: params[:transaction_type])
       end
 
       render json: {
@@ -96,9 +91,9 @@ module Admin
                      source: tx.source,
                      description: tx.description,
                      created_at: tx.created_at,
-                     metadata: tx.metadata
+                     metadata: tx.metadata,
                    }
-                 end
+                 end,
              }
     end
 
@@ -119,9 +114,9 @@ module Admin
                      cost: f.cost,
                      category: f.category,
                      enabled: f.enabled,
-                     settings: f.settings || {}
+                     settings: f.settings || {},
                    }
-                 end
+                 end,
              }
     end
 
@@ -136,13 +131,13 @@ module Admin
            description: params[:description],
            cost: params[:cost]&.to_i,
            enabled: params[:enabled],
-           settings: params[:settings]
+           settings: params[:settings],
          )
         render json: { success: true, feature: feature }
       else
         render json: {
                  success: false,
-                 errors: feature.errors.full_messages
+                 errors: feature.errors.full_messages,
                },
                status: :unprocessable_entity
       end
@@ -155,7 +150,7 @@ module Admin
       render json: {
                total_wallets: YakWallet.count,
                total_yaks_in_circulation: YakWallet.sum(:balance),
-               active_features: YakFeatureUse.active.count
+               active_features: YakFeatureUse.active.count,
              }
     end
 
@@ -177,9 +172,9 @@ module Admin
                      daily_cap: r.daily_cap,
                      min_trust_level: r.min_trust_level,
                      enabled: r.enabled,
-                     settings: r.settings || {}
+                     settings: r.settings || {},
                    }
-                 end
+                 end,
              }
     end
 
@@ -194,7 +189,7 @@ module Admin
         daily_cap: params[:daily_cap].to_i,
         min_trust_level: params[:min_trust_level].to_i,
         enabled: params[:enabled],
-        settings: params[:settings] || {}
+        settings: params[:settings] || {},
       )
 
       render json: {
@@ -208,15 +203,11 @@ module Admin
                  daily_cap: rule.daily_cap,
                  min_trust_level: rule.min_trust_level,
                  enabled: rule.enabled,
-                 settings: rule.settings || {}
-               }
+                 settings: rule.settings || {},
+               },
              }
     rescue StandardError => e
-      render json: {
-               success: false,
-               error: e.message
-             },
-             status: :unprocessable_entity
+      render json: { success: false, error: e.message }, status: :unprocessable_entity
     end
 
     private

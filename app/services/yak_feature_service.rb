@@ -29,9 +29,7 @@ class YakFeatureService
     quantity: 1
   )
     feature = YakFeature.available.find_by(feature_key: feature_key)
-    unless feature
-      return { success: false, error: I18n.t("yaks.errors.feature_not_found") }
-    end
+    return { success: false, error: I18n.t("yaks.errors.feature_not_found") } unless feature
 
     # Validate quantity
     quantity = [quantity.to_i, 1].max # Minimum 1
@@ -40,16 +38,10 @@ class YakFeatureService
     total_cost = feature.cost * quantity
 
     target_error =
-      validate_target(
-        user,
-        feature,
-        related_post: related_post,
-        related_topic: related_topic
-      )
+      validate_target(user, feature, related_post: related_post, related_topic: related_topic)
     return { success: false, error: target_error } if target_error
 
-    feature_data_error, feature_data =
-      validate_feature_data(feature, feature_data)
+    feature_data_error, feature_data = validate_feature_data(feature, feature_data)
     return { success: false, error: feature_data_error } if feature_data_error
 
     # Derive topic from post if not provided
@@ -77,19 +69,9 @@ class YakFeatureService
     effect_data = feature_data.to_h.with_indifferent_access
 
     YakWallet.transaction do
-      lock_feature_target!(
-        user,
-        feature,
-        related_post: related_post,
-        related_topic: related_topic
-      )
+      lock_feature_target!(user, feature, related_post: related_post, related_topic: related_topic)
 
-      unless can_apply?(
-               user,
-               feature,
-               related_post: related_post,
-               related_topic: related_topic
-             )
+      unless can_apply?(user, feature, related_post: related_post, related_topic: related_topic)
         transaction = nil
         failure_error = I18n.t("yaks.errors.already_applied")
         raise ActiveRecord::Rollback
@@ -106,7 +88,7 @@ class YakFeatureService
           "Applied #{feature.feature_name} (×#{quantity})",
           related_post_id: related_post&.id,
           related_topic_id: topic&.id,
-          metadata: effect_data.merge(quantity: quantity)
+          metadata: effect_data.merge(quantity: quantity),
         )
 
       raise ActiveRecord::Rollback unless transaction
@@ -119,7 +101,7 @@ class YakFeatureService
           related_post: related_post,
           related_topic: topic,
           expires_at: expires_at,
-          feature_data: effect_data
+          feature_data: effect_data,
         )
 
       apply_feature_effects(
@@ -128,26 +110,20 @@ class YakFeatureService
         related_post: related_post,
         related_topic: topic,
         feature_data: effect_data,
-        expires_at: expires_at
+        expires_at: expires_at,
       )
     end
 
     return { success: false, error: failure_error } unless transaction
 
     # Schedule expiration job if feature has expiration time
-    if expires_at
-      Jobs.enqueue_at(
-        expires_at,
-        :expire_yak_feature,
-        feature_use_id: feature_use.id
-      )
-    end
+    Jobs.enqueue_at(expires_at, :expire_yak_feature, feature_use_id: feature_use.id) if expires_at
 
     {
       success: true,
       feature_use: feature_use,
       transaction: transaction,
-      new_balance: wallet.reload.balance
+      new_balance: wallet.reload.balance,
     }
   end
 
@@ -160,8 +136,7 @@ class YakFeatureService
   def self.can_apply_to_post?(user, post, feature_key)
     return false unless post
 
-    existing_uses =
-      YakFeatureUse.active.for_post(post.id).by_feature(feature_key)
+    existing_uses = YakFeatureUse.active.for_post(post.id).by_feature(feature_key)
 
     existing_uses.empty?
   end
@@ -180,8 +155,8 @@ class YakFeatureService
       existing_uses =
         existing_uses.joins(:yak_feature).where(
           yak_features: {
-            feature_key: TOPIC_PIN_FEATURE_KEYS
-          }
+            feature_key: TOPIC_PIN_FEATURE_KEYS,
+          },
         )
     else
       existing_uses = existing_uses.by_feature(feature_key)
@@ -198,8 +173,7 @@ class YakFeatureService
   def self.can_apply_to_user?(user, feature_key)
     return false unless user
 
-    existing_uses =
-      YakFeatureUse.active.by_feature(feature_key).where(user_id: user.id)
+    existing_uses = YakFeatureUse.active.by_feature(feature_key).where(user_id: user.id)
 
     existing_uses.empty?
   end
@@ -224,38 +198,22 @@ class YakFeatureService
 
     case feature.category
     when "post"
-      unless related_post && related_topic.nil?
-        return I18n.t("yaks.errors.invalid_target")
-      end
-      unless related_post.user_id == user.id
-        return I18n.t("yaks.errors.not_allowed")
-      end
-      unless guardian.can_see?(related_post)
-        return I18n.t("yaks.errors.not_allowed")
-      end
+      return I18n.t("yaks.errors.invalid_target") unless related_post && related_topic.nil?
+      return I18n.t("yaks.errors.not_allowed") unless related_post.user_id == user.id
+      return I18n.t("yaks.errors.not_allowed") unless guardian.can_see?(related_post)
       if related_post.deleted_at.present? || related_post.hidden
         return I18n.t("yaks.errors.not_allowed")
       end
     when "topic"
-      unless related_topic && related_post.nil?
-        return I18n.t("yaks.errors.invalid_target")
-      end
-      unless related_topic.user_id == user.id
-        return I18n.t("yaks.errors.not_allowed")
-      end
-      unless guardian.can_see?(related_topic)
-        return I18n.t("yaks.errors.not_allowed")
-      end
+      return I18n.t("yaks.errors.invalid_target") unless related_topic && related_post.nil?
+      return I18n.t("yaks.errors.not_allowed") unless related_topic.user_id == user.id
+      return I18n.t("yaks.errors.not_allowed") unless guardian.can_see?(related_topic)
       if related_topic.deleted_at.present? || !related_topic.visible
         return I18n.t("yaks.errors.not_allowed")
       end
-      if related_topic.closed || related_topic.archived
-        return I18n.t("yaks.errors.not_allowed")
-      end
+      return I18n.t("yaks.errors.not_allowed") if related_topic.closed || related_topic.archived
     when "user"
-      if related_post || related_topic
-        return I18n.t("yaks.errors.invalid_target")
-      end
+      return I18n.t("yaks.errors.invalid_target") if related_post || related_topic
     else
       return I18n.t("yaks.errors.invalid_target")
     end
@@ -281,23 +239,17 @@ class YakFeatureService
 
     case feature.feature_key
     when "post_highlight", "topic_boost"
-      if data[:color] && !HIGHLIGHT_COLORS.include?(data[:color])
-        return invalid_feature_data
-      end
+      return invalid_feature_data if data[:color] && !HIGHLIGHT_COLORS.include?(data[:color])
     when "custom_flair"
-      if data[:icon] && !FLAIR_ICONS.include?(data[:icon])
-        return invalid_feature_data
-      end
+      return invalid_feature_data if data[:icon] && !FLAIR_ICONS.include?(data[:icon])
       if data[:bg_color] && !FLAIR_BACKGROUND_COLORS.include?(data[:bg_color])
         return invalid_feature_data
       end
-      if data[:color] && !FLAIR_TEXT_COLORS.include?(data[:color])
-        return invalid_feature_data
-      end
+      return invalid_feature_data if data[:color] && !FLAIR_TEXT_COLORS.include?(data[:color])
     when "custom_title"
       text = data[:text]
-      if !text.is_a?(String) || text.strip.blank? ||
-           text.length > MAX_CUSTOM_TITLE_LENGTH || text.match?(/[[:cntrl:]]/)
+      if !text.is_a?(String) || text.strip.blank? || text.length > MAX_CUSTOM_TITLE_LENGTH ||
+           text.match?(/[[:cntrl:]]/)
         return invalid_feature_data
       end
       data[:text] = text.strip
@@ -338,7 +290,7 @@ class YakFeatureService
     {
       "pinned" => topic.pinned_at.present?,
       "globally" => topic.pinned_globally,
-      "until" => topic.pinned_until&.iso8601
+      "until" => topic.pinned_until&.iso8601,
     }
   end
 
@@ -369,7 +321,7 @@ class YakFeatureService
         icon: feature_data[:icon] || "star",
         bg_color: feature_data[:bg_color] || "FF0000",
         color: feature_data[:color] || "FFFFFF",
-        applied_at: Time.zone.now.to_i
+        applied_at: Time.zone.now.to_i,
       }
       user.custom_fields["yak_features"] = current_features
       user.save_custom_fields
@@ -378,7 +330,7 @@ class YakFeatureService
       current_features["title"] = {
         enabled: true,
         text: feature_data[:text] || "Yak Supporter",
-        applied_at: Time.zone.now.to_i
+        applied_at: Time.zone.now.to_i,
       }
       user.custom_fields["yak_features"] = current_features
       user.save_custom_fields
@@ -393,18 +345,12 @@ class YakFeatureService
         current_features["highlight"] = {
           enabled: true,
           color: feature_data[:color] || "gold",
-          applied_at: Time.zone.now.to_i
+          applied_at: Time.zone.now.to_i,
         }
       when "post_pin"
-        current_features["pinned"] = {
-          enabled: true,
-          applied_at: Time.zone.now.to_i
-        }
+        current_features["pinned"] = { enabled: true, applied_at: Time.zone.now.to_i }
       when "post_boost"
-        current_features["boosted"] = {
-          enabled: true,
-          applied_at: Time.zone.now.to_i
-        }
+        current_features["boosted"] = { enabled: true, applied_at: Time.zone.now.to_i }
       end
 
       related_post.custom_fields["yak_features"] = current_features
@@ -415,28 +361,20 @@ class YakFeatureService
     if related_topic
       case feature_key
       when "topic_pin"
-        related_topic.update_pinned(
-          true,
-          false,
-          (expires_at || 24.hours.from_now).to_s
-        )
+        related_topic.update_pinned(true, false, (expires_at || 24.hours.from_now).to_s)
         current_features = related_topic.custom_fields["yak_features"] || {}
         current_features["pinned"] = { enabled: true }
         related_topic.custom_fields["yak_features"] = current_features
         related_topic.save_custom_fields
       when "topic_boost"
-        related_topic.update_pinned(
-          true,
-          true,
-          (expires_at || 72.hours.from_now).to_s
-        )
+        related_topic.update_pinned(true, true, (expires_at || 72.hours.from_now).to_s)
 
         # Add visual highlight for boosted topics
         current_features = related_topic.custom_fields["yak_features"] || {}
         current_features["boosted"] = {
           enabled: true,
           color: feature_data[:color] || "gold",
-          applied_at: Time.zone.now.to_i
+          applied_at: Time.zone.now.to_i,
         }
         related_topic.custom_fields["yak_features"] = current_features
         related_topic.save_custom_fields
@@ -514,11 +452,7 @@ class YakFeatureService
     previous_until = Time.zone.parse(previous["until"]) if previous["until"]
 
     if previous["pinned"] && (previous_until.nil? || previous_until.future?)
-      topic.update_pinned(
-        true,
-        previous["globally"] == true,
-        previous_until&.to_s
-      )
+      topic.update_pinned(true, previous["globally"] == true, previous_until&.to_s)
     else
       topic.update_pinned(false)
     end
