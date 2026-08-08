@@ -19,10 +19,7 @@ module Jobs
       return unless SiteSetting.yaks_enabled
 
       expired_features =
-        YakFeatureUse
-          .expired
-          .where(processed_at: nil)
-          .includes(:yak_feature, :related_post)
+        YakFeatureUse.expired.where(processed_at: nil).includes(:yak_feature, :related_post)
 
       expired_count = 0
       expired_features.find_each do |feature_use|

@@ -15,7 +15,7 @@ class YakWallet < ActiveRecord::Base
   # Credits Yaks to the wallet with transaction logging.
   #
   # @param amount [Integer] The number of Yaks to add (must be positive)
-  # @param source [String] The source of the Yaks (e.g., 'stripe_purchase', 'quality_post')
+  # @param source [String] The source of the Yaks (e.g., 'admin', 'earning_post_created')
   # @param description [String] Human-readable description of the transaction
   # @param metadata [Hash] Additional data to store with the transaction
   # @returns [YakTransaction, nil] The created transaction or nil if failed
@@ -35,7 +35,7 @@ class YakWallet < ActiveRecord::Base
         description: description,
         metadata: metadata,
         related_post_id: metadata[:related_post_id],
-        related_topic_id: metadata[:related_topic_id]
+        related_topic_id: metadata[:related_topic_id],
       )
     end
   rescue ActiveRecord::RecordInvalid
@@ -68,7 +68,7 @@ class YakWallet < ActiveRecord::Base
         description: description,
         metadata: options[:metadata] || {},
         related_post_id: options[:related_post_id],
-        related_topic_id: options[:related_topic_id]
+        related_topic_id: options[:related_topic_id],
       )
     end
   rescue ActiveRecord::RecordInvalid
@@ -85,8 +85,12 @@ class YakWallet < ActiveRecord::Base
     return nil if transaction.amount >= 0 # Only refund debit transactions
 
     refund_amount = transaction.amount.abs
+    refund_source = "refund_#{transaction.id}"
 
     transaction do
+      lock!
+      return nil if yak_transactions.exists?(transaction_type: "refund", source: refund_source)
+
       increment!(:balance, refund_amount)
       decrement!(:lifetime_spent, refund_amount)
       user.increment!(:yak_balance, refund_amount)
@@ -95,11 +99,11 @@ class YakWallet < ActiveRecord::Base
         user_id: user_id,
         amount: refund_amount,
         transaction_type: "refund",
-        source: "refund_#{transaction.id}",
+        source: refund_source,
         description: reason,
         metadata: {
-          original_transaction_id: transaction.id
-        }
+          original_transaction_id: transaction.id,
+        },
       )
     end
   rescue ActiveRecord::RecordInvalid
@@ -114,3 +118,20 @@ class YakWallet < ActiveRecord::Base
     find_or_create_by!(user_id: user.id)
   end
 end
+
+# == Schema Information
+#
+# Table name: yak_wallets
+#
+#  id              :bigint           not null, primary key
+#  balance         :integer          default(0), not null
+#  lifetime_earned :integer          default(0), not null
+#  lifetime_spent  :integer          default(0), not null
+#  created_at      :datetime         not null
+#  updated_at      :datetime         not null
+#  user_id         :bigint           not null
+#
+# Indexes
+#
+#  index_yak_wallets_on_user_id  (user_id) UNIQUE
+#

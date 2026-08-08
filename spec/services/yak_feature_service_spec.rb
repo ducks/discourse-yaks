@@ -16,8 +16,7 @@ RSpec.describe YakFeatureService do
   describe ".apply_feature" do
     it "does not sell unfinished post features" do
       expect {
-        result =
-          YakFeatureService.apply_feature(user, "post_pin", related_post: post)
+        result = YakFeatureService.apply_feature(user, "post_pin", related_post: post)
 
         expect(result[:success]).to be false
         expect(result[:error]).to eq(I18n.t("yaks.errors.feature_not_found"))
@@ -31,8 +30,8 @@ RSpec.describe YakFeatureService do
           "post_highlight",
           related_post: post,
           feature_data: {
-            color: "gold"
-          }
+            color: "gold",
+          },
         )
 
       expect(result[:success]).to be true
@@ -49,8 +48,8 @@ RSpec.describe YakFeatureService do
             "post_highlight",
             related_post: post,
             feature_data: {
-              color: "transparent"
-            }
+              color: "transparent",
+            },
           )
         unexpected_option =
           described_class.apply_feature(
@@ -58,16 +57,12 @@ RSpec.describe YakFeatureService do
             "post_highlight",
             related_post: post,
             feature_data: {
-              admin: true
-            }
+              admin: true,
+            },
           )
 
-        expect(invalid_color[:error]).to eq(
-          I18n.t("yaks.errors.invalid_feature_data")
-        )
-        expect(unexpected_option[:error]).to eq(
-          I18n.t("yaks.errors.invalid_feature_data")
-        )
+        expect(invalid_color[:error]).to eq(I18n.t("yaks.errors.invalid_feature_data"))
+        expect(unexpected_option[:error]).to eq(I18n.t("yaks.errors.invalid_feature_data"))
       }.not_to change { YakWallet.for_user(user).reload.balance }
     end
 
@@ -81,8 +76,8 @@ RSpec.describe YakFeatureService do
             "custom_flair",
             feature_data: {
               icon: "user-secret",
-              bg_color: "not-a-color"
-            }
+              bg_color: "not-a-color",
+            },
           )
 
         expect(result[:error]).to eq(I18n.t("yaks.errors.invalid_feature_data"))
@@ -94,16 +89,8 @@ RSpec.describe YakFeatureService do
 
       expect {
         invalid =
-          described_class.apply_feature(
-            user,
-            "custom_title",
-            feature_data: {
-              text: "x" * 51
-            }
-          )
-        expect(invalid[:error]).to eq(
-          I18n.t("yaks.errors.invalid_feature_data")
-        )
+          described_class.apply_feature(user, "custom_title", feature_data: { text: "x" * 51 })
+        expect(invalid[:error]).to eq(I18n.t("yaks.errors.invalid_feature_data"))
       }.not_to change { YakWallet.for_user(user).reload.balance }
 
       result =
@@ -111,45 +98,31 @@ RSpec.describe YakFeatureService do
           user,
           "custom_title",
           feature_data: {
-            text: "  Yak Wrangler  "
-          }
+            text: "  Yak Wrangler  ",
+          },
         )
 
       expect(result[:success]).to be true
       expect(result[:feature_use].feature_data["text"]).to eq("Yak Wrangler")
-      expect(
-        user.reload.custom_fields.dig("yak_features", "title", "text")
-      ).to eq("Yak Wrangler")
+      expect(user.reload.custom_fields.dig("yak_features", "title", "text")).to eq("Yak Wrangler")
     end
 
     it "deducts cost from user balance" do
       expect {
-        YakFeatureService.apply_feature(
-          user,
-          "post_highlight",
-          related_post: post
-        )
+        YakFeatureService.apply_feature(user, "post_highlight", related_post: post)
       }.to change { user.reload.yak_balance }.by(-25)
     end
 
     it "creates a YakFeatureUse record" do
       expect {
-        YakFeatureService.apply_feature(
-          user,
-          "post_highlight",
-          related_post: post
-        )
+        YakFeatureService.apply_feature(user, "post_highlight", related_post: post)
       }.to change { YakFeatureUse.count }.by(1)
     end
 
     it "creates a YakTransaction record" do
       wallet = YakWallet.for_user(user)
       expect {
-        YakFeatureService.apply_feature(
-          user,
-          "post_highlight",
-          related_post: post
-        )
+        YakFeatureService.apply_feature(user, "post_highlight", related_post: post)
       }.to change { wallet.yak_transactions.count }.by(1)
     end
 
@@ -159,26 +132,17 @@ RSpec.describe YakFeatureService do
         "post_highlight",
         related_post: post,
         feature_data: {
-          color: "blue"
-        }
+          color: "blue",
+        },
       )
 
       post.reload
-      expect(
-        post.custom_fields["yak_features"]["highlight"]["enabled"]
-      ).to be true
-      expect(post.custom_fields["yak_features"]["highlight"]["color"]).to eq(
-        "blue"
-      )
+      expect(post.custom_fields["yak_features"]["highlight"]["enabled"]).to be true
+      expect(post.custom_fields["yak_features"]["highlight"]["color"]).to eq("blue")
     end
 
     it "returns error if feature not found" do
-      result =
-        YakFeatureService.apply_feature(
-          user,
-          "nonexistent_feature",
-          related_post: post
-        )
+      result = YakFeatureService.apply_feature(user, "nonexistent_feature", related_post: post)
 
       expect(result[:success]).to be false
       expect(result[:error]).to eq(I18n.t("yaks.errors.feature_not_found"))
@@ -186,12 +150,7 @@ RSpec.describe YakFeatureService do
 
     it "returns error if insufficient balance" do
       YakWallet.for_user(user).update!(balance: 10)
-      result =
-        YakFeatureService.apply_feature(
-          user,
-          "post_highlight",
-          related_post: post
-        )
+      result = YakFeatureService.apply_feature(user, "post_highlight", related_post: post)
 
       expect(result[:success]).to be false
       expect(result[:error]).to eq(I18n.t("yaks.errors.insufficient_balance"))
@@ -201,134 +160,77 @@ RSpec.describe YakFeatureService do
       other_post = Fabricate(:post)
 
       expect {
-        result =
-          described_class.apply_feature(
-            user,
-            "post_highlight",
-            related_post: other_post
-          )
+        result = described_class.apply_feature(user, "post_highlight", related_post: other_post)
         expect(result[:error]).to eq(I18n.t("yaks.errors.not_allowed"))
       }.not_to change { YakWallet.for_user(user).reload.balance }
     end
 
     it "rejects a feature applied to the wrong target type" do
-      result =
-        described_class.apply_feature(user, "custom_flair", related_post: post)
+      result = described_class.apply_feature(user, "custom_flair", related_post: post)
 
       expect(result[:success]).to be false
       expect(result[:error]).to eq(I18n.t("yaks.errors.invalid_target"))
     end
 
     it "rolls back the debit when applying the effect fails" do
-      allow(described_class).to receive(:apply_feature_effects).and_raise(
-        "effect failed"
-      )
+      allow(described_class).to receive(:apply_feature_effects).and_raise("effect failed")
 
       expect {
         expect {
-          described_class.apply_feature(
-            user,
-            "post_highlight",
-            related_post: post
-          )
+          described_class.apply_feature(user, "post_highlight", related_post: post)
         }.to raise_error("effect failed")
       }.not_to change { YakWallet.for_user(user).reload.balance }
     end
 
     it "returns error if feature already applied to post" do
-      YakFeatureService.apply_feature(
-        user,
-        "post_highlight",
-        related_post: post
-      )
+      YakFeatureService.apply_feature(user, "post_highlight", related_post: post)
       YakWallet.for_user(user).update!(balance: 100)
 
-      result =
-        YakFeatureService.apply_feature(
-          user,
-          "post_highlight",
-          related_post: post
-        )
+      result = YakFeatureService.apply_feature(user, "post_highlight", related_post: post)
 
       expect(result[:success]).to be false
       expect(result[:error]).to eq(I18n.t("yaks.errors.already_applied"))
     end
 
     it "sets expiration for time-limited features" do
-      YakFeature.find_by(feature_key: "post_highlight").update!(
-        settings: {
-          duration_hours: 24
-        }
-      )
-      result =
-        YakFeatureService.apply_feature(
-          user,
-          "post_highlight",
-          related_post: post
-        )
+      YakFeature.find_by(feature_key: "post_highlight").update!(settings: { duration_hours: 24 })
+      result = YakFeatureService.apply_feature(user, "post_highlight", related_post: post)
 
       expect(result[:feature_use].expires_at).to be_present
-      expect(result[:feature_use].expires_at).to be_within(1.minute).of(
-        24.hours.from_now
-      )
+      expect(result[:feature_use].expires_at).to be_within(1.minute).of(24.hours.from_now)
     end
 
     it "does not set expiration for permanent features" do
-      result =
-        YakFeatureService.apply_feature(
-          user,
-          "post_highlight",
-          related_post: post
-        )
+      result = YakFeatureService.apply_feature(user, "post_highlight", related_post: post)
 
       expect(result[:feature_use].expires_at).to be_nil
     end
 
     it "schedules expiration job for time-limited features" do
       freeze_time
-      YakFeature.find_by(feature_key: "post_highlight").update!(
-        settings: {
-          duration_hours: 24
-        }
-      )
+      YakFeature.find_by(feature_key: "post_highlight").update!(settings: { duration_hours: 24 })
 
       expect_enqueued_with(job: :expire_yak_feature, at: 24.hours.from_now) do
-        YakFeatureService.apply_feature(
-          user,
-          "post_highlight",
-          related_post: post
-        )
+        YakFeatureService.apply_feature(user, "post_highlight", related_post: post)
       end
     end
 
     it "does not schedule expiration job for permanent features" do
       expect_not_enqueued_with(job: :expire_yak_feature) do
-        YakFeatureService.apply_feature(
-          user,
-          "post_highlight",
-          related_post: post
-        )
+        YakFeatureService.apply_feature(user, "post_highlight", related_post: post)
       end
     end
   end
 
   describe ".can_apply_to_post?" do
     it "returns true if feature not yet applied" do
-      expect(
-        YakFeatureService.can_apply_to_post?(user, post, "post_highlight")
-      ).to be true
+      expect(YakFeatureService.can_apply_to_post?(user, post, "post_highlight")).to be true
     end
 
     it "returns false if feature already applied and active" do
-      YakFeatureService.apply_feature(
-        user,
-        "post_highlight",
-        related_post: post
-      )
+      YakFeatureService.apply_feature(user, "post_highlight", related_post: post)
 
-      expect(
-        YakFeatureService.can_apply_to_post?(user, post, "post_highlight")
-      ).to be false
+      expect(YakFeatureService.can_apply_to_post?(user, post, "post_highlight")).to be false
     end
 
     it "returns false when another user already applied the feature" do
@@ -336,68 +238,50 @@ RSpec.describe YakFeatureService do
       feature = YakFeature.find_by(feature_key: "post_highlight")
       wallet = YakWallet.for_user(other_user)
       wallet.add_yaks(feature.cost, "test", "Initial balance")
-      transaction =
-        wallet.spend_yaks(feature.cost, feature.feature_key, "Applied feature")
+      transaction = wallet.spend_yaks(feature.cost, feature.feature_key, "Applied feature")
       YakFeatureUse.create!(
         user: other_user,
         yak_feature: feature,
         yak_transaction: transaction,
-        related_post: post
+        related_post: post,
       )
 
-      expect(
-        described_class.can_apply_to_post?(user, post, feature.feature_key)
-      ).to be false
+      expect(described_class.can_apply_to_post?(user, post, feature.feature_key)).to be false
     end
 
     it "returns true if previous feature use expired" do
       wallet = YakWallet.for_user(user)
       feature = YakFeature.find_by(feature_key: "post_pin")
-      transaction =
-        wallet.spend_yaks(50, "post_pin", "Test", related_post_id: post.id)
+      transaction = wallet.spend_yaks(50, "post_pin", "Test", related_post_id: post.id)
 
       YakFeatureUse.create!(
         user: user,
         yak_feature: feature,
         yak_transaction: transaction,
         related_post: post,
-        expires_at: 1.hour.ago
+        expires_at: 1.hour.ago,
       )
 
-      expect(
-        YakFeatureService.can_apply_to_post?(user, post, "post_pin")
-      ).to be true
+      expect(YakFeatureService.can_apply_to_post?(user, post, "post_pin")).to be true
     end
 
     it "returns false if post is nil" do
-      expect(
-        YakFeatureService.can_apply_to_post?(user, nil, "post_highlight")
-      ).to be false
+      expect(YakFeatureService.can_apply_to_post?(user, nil, "post_highlight")).to be false
     end
   end
 
   describe "topic pin safety" do
     it "prevents overlapping Yak topic pin variants" do
-      first_result =
-        described_class.apply_feature(user, "topic_pin", related_topic: topic)
+      first_result = described_class.apply_feature(user, "topic_pin", related_topic: topic)
       YakWallet.for_user(user).add_yaks(200, "test", "Replenish balance")
 
       expect(first_result[:success]).to be true
-      expect(
-        described_class.can_apply_to_topic?(user, topic, "topic_boost")
-      ).to be false
+      expect(described_class.can_apply_to_topic?(user, topic, "topic_boost")).to be false
 
       expect {
-        second_result =
-          described_class.apply_feature(
-            user,
-            "topic_boost",
-            related_topic: topic
-          )
+        second_result = described_class.apply_feature(user, "topic_boost", related_topic: topic)
         expect(second_result[:success]).to be false
-        expect(second_result[:error]).to eq(
-          I18n.t("yaks.errors.already_applied")
-        )
+        expect(second_result[:error]).to eq(I18n.t("yaks.errors.already_applied"))
       }.not_to change { YakWallet.for_user(user).reload.balance }
     end
 
@@ -405,8 +289,7 @@ RSpec.describe YakFeatureService do
       topic.update_pinned(true, false)
       YakWallet.for_user(user).add_yaks(100, "test", "Boost balance")
 
-      result =
-        described_class.apply_feature(user, "topic_boost", related_topic: topic)
+      result = described_class.apply_feature(user, "topic_boost", related_topic: topic)
       expect(result[:success]).to be true
       expect(topic.reload.pinned_globally).to be true
 
@@ -418,8 +301,7 @@ RSpec.describe YakFeatureService do
     end
 
     it "unpins a topic that had no native pin before purchase" do
-      result =
-        described_class.apply_feature(user, "topic_pin", related_topic: topic)
+      result = described_class.apply_feature(user, "topic_pin", related_topic: topic)
       expect(topic.reload.pinned_at).to be_present
 
       described_class.remove_feature_effects(result[:feature_use])
@@ -428,8 +310,7 @@ RSpec.describe YakFeatureService do
     end
 
     it "does not overwrite a pin changed while the Yak feature was active" do
-      result =
-        described_class.apply_feature(user, "topic_pin", related_topic: topic)
+      result = described_class.apply_feature(user, "topic_pin", related_topic: topic)
       topic.update_pinned(true, false)
 
       described_class.remove_feature_effects(result[:feature_use])
@@ -470,24 +351,18 @@ RSpec.describe YakFeatureService do
         user: user,
         related_post: post,
         feature_data: {
-          color: "red"
-        }
+          color: "red",
+        },
       )
 
       post.reload
       expect(post.custom_fields["yak_features"]["highlight"]).to be_present
-      expect(post.custom_fields["yak_features"]["highlight"]["color"]).to eq(
-        "red"
-      )
+      expect(post.custom_fields["yak_features"]["highlight"]["color"]).to eq("red")
     end
 
     it "applies pin effect to post" do
       feature = YakFeature.find_by(feature_key: "post_pin")
-      YakFeatureService.apply_feature_effects(
-        feature,
-        user: user,
-        related_post: post
-      )
+      YakFeatureService.apply_feature_effects(feature, user: user, related_post: post)
 
       post.reload
       expect(post.custom_fields["yak_features"]["pinned"]).to be_present
@@ -496,11 +371,7 @@ RSpec.describe YakFeatureService do
 
     it "applies boost effect to post" do
       feature = YakFeature.find_by(feature_key: "post_boost")
-      YakFeatureService.apply_feature_effects(
-        feature,
-        user: user,
-        related_post: post
-      )
+      YakFeatureService.apply_feature_effects(feature, user: user, related_post: post)
 
       post.reload
       expect(post.custom_fields["yak_features"]["boosted"]).to be_present
@@ -514,14 +385,10 @@ RSpec.describe YakFeatureService do
         user: user,
         related_post: post,
         feature_data: {
-          color: "gold"
-        }
+          color: "gold",
+        },
       )
-      YakFeatureService.apply_feature_effects(
-        boost,
-        user: user,
-        related_post: post
-      )
+      YakFeatureService.apply_feature_effects(boost, user: user, related_post: post)
 
       post.reload
       expect(post.custom_fields["yak_features"]["highlight"]).to be_present
@@ -532,23 +399,17 @@ RSpec.describe YakFeatureService do
   describe ".remove_feature_effects" do
     fab!(:wallet) { Fabricate(:yak_wallet, user: user) }
     let(:yak_feature) { YakFeature.find_by!(feature_key: "post_highlight") }
-    fab!(:transaction) do
-      Fabricate(:yak_transaction, user: user, yak_wallet: wallet)
-    end
+    fab!(:transaction) { Fabricate(:yak_transaction, user: user, yak_wallet: wallet) }
 
     let(:feature_use) do
-      post.custom_fields["yak_features"] = {
-        "highlight" => {
-          "enabled" => true
-        }
-      }
+      post.custom_fields["yak_features"] = { "highlight" => { "enabled" => true } }
       post.save_custom_fields
 
       YakFeatureUse.create!(
         user: user,
         yak_feature: yak_feature,
         yak_transaction: transaction,
-        related_post: post
+        related_post: post,
       )
     end
 
@@ -563,11 +424,11 @@ RSpec.describe YakFeatureService do
       feature_use
       post.custom_fields["yak_features"] = {
         "highlight" => {
-          "enabled" => true
+          "enabled" => true,
         },
         "boosted" => {
-          "enabled" => true
-        }
+          "enabled" => true,
+        },
       }
       post.save_custom_fields
 

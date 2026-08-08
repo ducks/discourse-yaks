@@ -1,42 +1,31 @@
-# Discourse Yaks - Virtual Currency System
+# Discourse Yaks
 
-A non-monetary community currency system for Discourse forums that allows users to earn and spend "Yaks" on forum perks. The name is a playful pun on "yakking" (talking/chatting) and "yak shaving" (developer rabbit holes).
+Discourse Yaks is an experimental, non-monetary community currency plugin. Members earn Yaks through participation and spend them on temporary forum perks. Yaks cannot be purchased with real money.
 
-Yaks cannot be purchased with real money. They are earned through community participation or granted by staff.
+> **Alpha software:** test this plugin on a staging site before enabling it in production. Economy defaults and compatibility may change as the plugin is exercised by more communities.
 
 ## Features
 
-### Core Wallet System
-- **Balance Tracking**: Each user has a wallet with current balance and lifetime statistics
-- **Transaction History**: Complete audit trail of all Yak transactions
-- **Multiple Transaction Types**: Earn, spend, refund, and admin grants
+Members can:
 
-### Available Features
+- earn Yaks by creating posts and topics, receiving likes, and having solutions accepted when discourse-solved is installed;
+- view their balance, lifetime totals, and recent transactions at `/yaks`;
+- highlight one of their posts;
+- temporarily pin or globally boost one of their topics;
+- apply a temporary custom title or avatar flair.
 
-**Currently Implemented:**
-1. **Post Highlighting** - Add a colored border and background to posts (gold, blue, red, green, purple)
-2. **Topic Pinning** - Pin topics to the top of their category for a limited time
-3. **Custom User Title** - Set a custom title displayed next to your username
-4. **Custom Avatar Flair** - Display custom flair badge next to your avatar
-5. **Topic Boost** - Pin topic globally with visual highlighting
+Staff can:
 
-**All features support quantity purchases** - Buy multiple units to extend duration (e.g., 2x = double duration at 2x cost, up to 12x)
+- view economy statistics;
+- grant Yaks to a member, with the grant recorded by `StaffActionLogger`;
+- change the cost, duration, and availability of implemented perks;
+- configure earning amounts, daily event caps, and minimum trust levels.
 
-**Planned Features:**
-6. **Post Pinning** - Pin posts to the top of topics
-7. **Post Boost** - Priority in feeds and search
-
-### Admin Tools
-- System-wide statistics dashboard
-- Grant Yaks to users
-- View transaction history with filtering
-- Create and manage custom features
-- Edit earning rules (amount, daily caps, trust level requirements)
-- Full audit logging
+Post pinning and post boosting are present as disabled data records but are not implemented. Arbitrary custom feature keys are not supported.
 
 ## Installation
 
-1. Add the plugin to your `app.yml`:
+Add the plugin to your container's `app.yml`:
 
 ```yaml
 hooks:
@@ -47,255 +36,65 @@ hooks:
           - git clone https://github.com/ducks/discourse-yaks.git
 ```
 
-2. Rebuild your container:
+Rebuild the container, then enable `yaks_enabled` in Admin → Settings → Plugins. Automatic earning can be independently disabled with `yaks_earning_enabled`.
 
-```bash
-./launcher rebuild app
-```
+The plugin declares Discourse 3.4.0 as its minimum version. Alpha development and verification are performed against a current Discourse checkout.
 
-3. Enable the plugin in Admin → Settings → Plugins → `yaks_enabled`
+## How it works
 
-4. Default features will be seeded automatically when enabled
+Earning events are idempotent and serialized per wallet. Each earning rule can require a trust level and content length and can cap the number of rewarded events per day. A new topic is rewarded only through the topic rule; its first post does not also receive the ordinary post reward.
 
-## Configuration
+Spending is performed inside database transactions with wallet and target locking. The server owns feature prices, validates target ownership and visibility, allowlists feature options, and prevents concurrent duplicate applications. Temporary effects are removed by scheduled jobs. Topic expiration restores the prior pin state when it has not subsequently been changed by staff.
 
-### Site Settings
+Quantity purchases extend duration at the same multiple of the feature cost, up to 12 units. The custom-title and custom-flair interfaces expose quantity selection; contextual post and topic controls currently apply one unit at a time.
 
-- **yaks_enabled** - Enable/disable the Yaks currency system
-- **yaks_earning_enabled** - Allow users to earn Yaks through contributions
-- **yaks_min_likes_for_reward** - Minimum likes needed to earn Yaks (default: 5)
-- **yaks_max_reward_per_post** - Maximum Yaks per post (default: 50)
-- **yaks_show_balance_publicly** - Show balances on user profiles
+## HTTP endpoints
 
-## Usage
+These endpoints are used by the plugin UI. They are not a stable public API during alpha.
 
-### For Users
+Member endpoints, requiring login:
 
-#### Viewing Balance
-Users can view their Yak balance at `/yaks` which shows:
-- Current balance
-- Lifetime earned and spent
-- Transaction history
-- Available features to purchase
+- `GET /yaks.json` — wallet, transaction history, and profile perks
+- `GET /yaks/catalog.json` — enabled server-priced perk catalog
+- `POST /yaks/spend.json` — validate, purchase, and apply a perk
 
-#### Spending Yaks
-1. Navigate to a post or topic you want to enhance
-2. Click the "Spend Yaks" button (in post actions menu or topic footer)
-3. Select a feature and customize options (e.g., highlight color)
-4. Confirm the purchase
-5. The feature is applied immediately and your balance is updated
+Staff endpoints:
 
-Note: Topic pins appear at the top of their category, not the global Latest feed. Topic boosts pin globally across all categories.
-
-#### Earning Yaks
-Users can earn Yaks automatically through:
-- Creating posts
-- Creating topics
-- Receiving likes on posts
-- Having solutions accepted (with Solved plugin)
-
-All earning rules are configurable by admins:
-- Amount of Yaks awarded per action
-- Daily caps to prevent abuse
-- Minimum trust level requirements
-- Enable/disable specific rules
-
-Users can also receive Yaks through admin grants. There is no real-money purchase flow.
-
-### For Admins
-
-#### Granting Yaks
-```bash
-POST /admin/yaks/give
-{
-  "user_id": 123,
-  "amount": 100,
-  "reason": "Community contribution award"
-}
-```
-
-#### Viewing Statistics
-- Navigate to Admin → Yaks
-- View system-wide stats and recent transactions
-- Filter transactions by user or type
-
-#### Creating Custom Features
-```bash
-POST /admin/yaks/features
-{
-  "feature_key": "custom_avatar_frame",
-  "feature_name": "Custom Avatar Frame",
-  "description": "Add a decorative frame to your avatar",
-  "cost": 75,
-  "category": "user",
-  "settings": {
-    "duration_days": 30
-  }
-}
-```
-
-## API Endpoints
-
-### User Endpoints
-- `GET /yaks` - View wallet and available features
-- `POST /yaks/spend` - Purchase and apply a feature
-
-### Admin Endpoints
-- `GET /admin/yaks` - System statistics
-- `POST /admin/yaks/give` - Grant Yaks to users
-- `GET /admin/yaks/transactions` - Transaction history
-- `POST /admin/yaks/features` - Create new feature
-- `PUT /admin/yaks/features/:id` - Update feature
-
-## Database Schema
-
-### Tables
-- `yak_wallets` - User wallet balances and lifetime stats
-- `yak_transactions` - Complete transaction history
-- `yak_features` - Available purchasable features
-- `yak_feature_uses` - Tracking of applied features
-
-### Custom Fields
-- `users.yak_balance` - Cached balance for quick lookups
-- `posts.yak_features` - JSON field storing active post features
+- `GET /admin/plugins/yaks/stats.json`
+- `POST /admin/plugins/yaks/give.json`
+- `GET /admin/plugins/yaks/transactions.json`
+- `GET /admin/plugins/yaks/features.json`
+- `PUT /admin/plugins/yaks/features/:id.json`
+- `GET /admin/plugins/yaks/earning_rules.json`
+- `PUT /admin/plugins/yaks/earning_rules/:id.json`
 
 ## Development
 
-### Running Tests
+Install this repository at `plugins/discourse-yaks` in a Discourse development checkout, then run:
 
 ```bash
-# Run all plugin tests
 LOAD_PLUGINS=1 bin/rspec plugins/discourse-yaks/spec
-
-# Run specific test file
-LOAD_PLUGINS=1 bin/rspec plugins/discourse-yaks/spec/models/yak_wallet_spec.rb
 ```
 
-### Project Structure
+Standalone formatting and frontend checks are available after installing the repository dependencies:
 
-```
-plugins/discourse-yaks/
-├── plugin.rb                    # Main plugin definition
-├── config/
-│   ├── settings.yml             # Site settings
-│   └── locales/en.yml          # Translations
-├── db/migrate/
-│   └── 20250103000001_create_yak_system.rb
-├── app/
-│   ├── controllers/
-│   │   ├── yaks_controller.rb
-│   │   └── admin/yaks_controller.rb
-│   ├── models/
-│   │   ├── yak_wallet.rb
-│   │   ├── yak_transaction.rb
-│   │   ├── yak_feature.rb
-│   │   └── yak_feature_use.rb
-│   └── services/
-│       └── yak_feature_service.rb
-├── assets/
-│   ├── javascripts/discourse/   # Frontend components (complete)
-│   │   ├── components/
-│   │   ├── initializers/
-│   │   ├── routes/
-│   │   └── templates/
-│   └── stylesheets/yaks.scss
-├── spec/                        # Full test suite
-└── README.md
+```bash
+bundle exec rubocop
+pnpm lint
 ```
 
-## Current Status
+See [SETUP.md](SETUP.md) for local setup notes and [TODO.md](TODO.md) for the alpha roadmap.
 
-### Implemented (Version 20251019)
-**Backend:**
-- Core wallet and transaction system
-- Database schema and migrations
-- All models with full test coverage
-- YakFeatureService with modular post/topic support
-- Controllers (user and admin endpoints)
-- Site settings configuration
-- Feature expiration system with background jobs
-- Earning system with configurable rules
-- Real-time balance updates via MessageBus
-- Quantity support for extended feature durations
+## Alpha limitations
 
-**Frontend:**
-- Balance display in user menu with reactive updates
-- Spend Yaks button in post actions menu and topic footer
-- Modular feature selection modal with quantity support
-- Full wallet page with stats and transaction history
-- Post highlighting with 5 color options
-- Topic pinning and boosting UI
-- Custom title and flair modals with live preview
-- Shared YakFeatureQuantity helper class
-- Modern Discourse API patterns
+- Economy defaults need community testing and tuning.
+- Browser-level tests and broader version compatibility testing remain to be added.
+- Rewards are not clawed back when previously rewarded content is later removed.
+- Post pinning and post boosting remain disabled until their effects are implemented.
+- HTTP endpoints and stored feature data may change before a stable release.
 
-**Admin UI:**
-- System statistics dashboard
-- Edit features
-- Edit earning rules
-- Transaction history with filters
-
-**Features Working End-to-End:**
-- Post highlighting with expiration
-- Topic pinning and boosting
-- Custom user titles and avatar flair
-- Earning Yaks through posts, topics, likes, solutions
-- Quantity purchases for extended durations
-
-### Next Steps
-1. **Implement Remaining Features**
-   - Post pinning logic and display
-   - Post boost logic and display
-
-2. **Authorization & Security**
-   - Guardian implementation
-   - Rate limiting on endpoints
-   - Security audit
-
-3. **Economy Balancing**
-   - Tune earning rules and feature costs
-   - Add additional anti-abuse controls
-
-4. **Testing**
-   - Controller request specs
-   - System specs for UI interactions
-   - JavaScript component tests
-
-## Security Considerations
-
-- All spending actions require authentication
-- Transaction atomicity ensures balance consistency
-- Rate limiting on spending (to be implemented)
-- Admin actions logged via StaffActionLogger
-- Input validation on all endpoints
-
-## Performance
-
-- Denormalized `users.yak_balance` for fast lookups
-- Indexed foreign keys on all relations
-- JSONB for flexible feature_data storage
-- Efficient scopes for common queries
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Write tests for new functionality
-4. Ensure all tests pass
-5. Submit a pull request
+Please report reproducible problems through [GitHub Issues](https://github.com/ducks/discourse-yaks/issues).
 
 ## License
 
-GPL v2 (same as Discourse)
-
-## Support
-
-- [Report issues on GitHub](https://github.com/ducks/discourse-yaks/issues)
-- Community discussion on Meta Discourse
-- Documentation at discourse.org
-
----
-
-**Version**: 20260802
-**Status**: Alpha - Backend and frontend complete. Five features working end-to-end with expiration system. Earning system operational. Admin UI fully functional.
-**Discourse Version**: Tested with Discourse 3.4+
+GNU General Public License version 2.0 or later (`GPL-2.0-or-later`). See [LICENSE](LICENSE) and [LICENSE-NOTICE](LICENSE-NOTICE).

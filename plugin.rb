@@ -1,10 +1,12 @@
 # frozen_string_literal: true
 
 # name: discourse-yaks
-# about: Virtual currency system for Discourse - earn and spend Yaks on premium features
-# version: 20260802
+# about: Non-monetary community currency for earning and spending Yaks on forum perks
+# version: 20260808
 # authors: ducks
 # url: https://github.com/ducks/discourse-yaks
+# required_version: 3.4.0
+# license: GPL-2.0-or-later
 
 enabled_site_setting :yaks_enabled
 
@@ -54,22 +56,16 @@ after_initialize do
     get "/yaks/catalog" => "yaks#catalog"
     post "/yaks/spend" => "yaks#spend"
 
-    get "/admin/plugins/yaks/stats" => "admin/yaks#stats",
-        :constraints => StaffConstraint.new
-    post "/admin/plugins/yaks/give" => "admin/yaks#give_yaks",
-         :constraints => StaffConstraint.new
+    get "/admin/plugins/yaks/stats" => "admin/yaks#stats", :constraints => StaffConstraint.new
+    post "/admin/plugins/yaks/give" => "admin/yaks#give_yaks", :constraints => StaffConstraint.new
     get "/admin/plugins/yaks/transactions" => "admin/yaks#transactions",
         :constraints => StaffConstraint.new
-    get "/admin/plugins/yaks/features" => "admin/yaks#features",
-        :constraints => StaffConstraint.new
-    post "/admin/plugins/yaks/features" => "admin/yaks#create_feature",
-         :constraints => StaffConstraint.new
+    get "/admin/plugins/yaks/features" => "admin/yaks#features", :constraints => StaffConstraint.new
     put "/admin/plugins/yaks/features/:id" => "admin/yaks#update_feature",
         :constraints => StaffConstraint.new
     get "/admin/plugins/yaks/earning_rules" => "admin/yaks#earning_rules",
         :constraints => StaffConstraint.new
-    put "/admin/plugins/yaks/earning_rules/:id" =>
-          "admin/yaks#update_earning_rule",
+    put "/admin/plugins/yaks/earning_rules/:id" => "admin/yaks#update_earning_rule",
         :constraints => StaffConstraint.new
   end
 
@@ -87,37 +83,31 @@ after_initialize do
   add_to_serializer(
     :post,
     :yak_features,
-    include_condition: -> { object.custom_fields["yak_features"].present? }
+    include_condition: -> { object.custom_fields["yak_features"].present? },
   ) { object.custom_fields["yak_features"] }
 
   # Add yak_features to topic list item serializer
   add_to_serializer(
     :topic_list_item,
     :yak_features,
-    include_condition: -> { object.custom_fields["yak_features"].present? }
+    include_condition: -> { object.custom_fields["yak_features"].present? },
   ) { object.custom_fields["yak_features"] }
 
   # Add yak_features to topic view serializer
   add_to_serializer(
     :topic_view,
     :yak_features,
-    include_condition: -> do
-      object.topic.custom_fields["yak_features"].present?
-    end
+    include_condition: -> { object.topic.custom_fields["yak_features"].present? },
   ) { object.topic.custom_fields["yak_features"] }
 
   # Preload topic custom fields to avoid N+1 queries
   if TopicList.respond_to?(:preloaded_custom_fields)
     TopicList.preloaded_custom_fields << "yak_features"
   end
-  if Topic.respond_to?(:preloaded_custom_fields)
-    Topic.preloaded_custom_fields << "yak_features"
-  end
+  Topic.preloaded_custom_fields << "yak_features" if Topic.respond_to?(:preloaded_custom_fields)
 
   # Preload user custom fields for flair
-  if User.respond_to?(:preloaded_custom_fields)
-    User.preloaded_custom_fields << "yak_features"
-  end
+  User.preloaded_custom_fields << "yak_features" if User.respond_to?(:preloaded_custom_fields)
 
   # Override flair fields with yak custom flair if present
   %i[post user_card post_action_user].each do |serializer_name|
@@ -222,12 +212,7 @@ after_initialize do
   end
 
   # Override title in additional serializers
-  %i[
-    user_name
-    group_post_user
-    group_user
-    hidden_profile
-  ].each do |serializer_name|
+  %i[user_name group_post_user group_user hidden_profile].each do |serializer_name|
     add_to_serializer(serializer_name, :title) do
       begin
         title_data = object.custom_fields["yak_features"]&.dig("title")
@@ -237,9 +222,7 @@ after_initialize do
           object.title
         end
       rescue => e
-        Rails.logger.error(
-          "Error in title serializer (#{serializer_name}): #{e.message}"
-        )
+        Rails.logger.error("Error in title serializer (#{serializer_name}): #{e.message}")
         object.title
       end
     end
@@ -265,31 +248,27 @@ after_initialize do
 
   # Seed default features on plugin initialization
   on(:site_setting_changed) do |name, _old_value, new_value|
-    if name == :yaks_enabled && new_value == true
-      YakFeature.seed_default_features
-    end
+    YakFeature.seed_default_features if name == :yaks_enabled && new_value == true
   end
 
   # Earning system event hooks
   on(:post_created) do |post, _opts, _user|
-    Rails.logger.info("[Yaks] Post created event fired for post #{post.id}")
     next if post.post_type != Post.types[:regular]
+    # Discourse emits both topic_created and post_created for a topic's first
+    # post. Reward it through the more valuable topic rule only, otherwise a
+    # new topic silently earns both configured amounts.
+    next if post.is_first_post?
     next if post.deleted_at.present?
     next if post.hidden
     next if !post.user
 
-    Rails.logger.info(
-      "[Yaks] Attempting to award Yaks to user #{post.user.id} for post creation"
+    YakEarningService.award(
+      user: post.user,
+      action_key: "post_created",
+      related_post: post,
+      related_topic: post.topic,
+      event_id: post.id,
     )
-    result =
-      YakEarningService.award(
-        user: post.user,
-        action_key: "post_created",
-        related_post: post,
-        related_topic: post.topic,
-        event_id: post.id
-      )
-    Rails.logger.info("[Yaks] Award result: #{result}")
   end
 
   on(:topic_created) do |topic, _opts, _user|
@@ -301,7 +280,7 @@ after_initialize do
       user: topic.user,
       action_key: "topic_created",
       related_topic: topic,
-      event_id: topic.id
+      event_id: topic.id,
     )
   end
 
@@ -317,7 +296,7 @@ after_initialize do
       action_key: "post_liked",
       related_post: post,
       related_topic: post.topic,
-      event_id: "#{post.id}:#{post_action.user_id}"
+      event_id: "#{post.id}:#{post_action.user_id}",
     )
   end
 
@@ -332,7 +311,7 @@ after_initialize do
       action_key: "solution_accepted",
       related_post: post,
       related_topic: post.topic,
-      event_id: post.id
+      event_id: post.id,
     )
   end
 end

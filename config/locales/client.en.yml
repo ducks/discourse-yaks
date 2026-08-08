@@ -93,6 +93,8 @@ en:
           actions: "Actions"
           yaks: "Yaks"
           hours: "hours"
+          days: "days"
+          permanent: "Permanent"
         earning_rules:
           title: "Earning Rules"
           action: "Action"
