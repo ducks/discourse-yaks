@@ -32,6 +32,81 @@ RSpec.describe YaksController do
       )
     end
 
+    it "returns active and permanent perks but omits expired perks" do
+      sign_in(user)
+      wallet = Fabricate(:yak_wallet, user: user)
+      topic = Fabricate(:topic, user: user)
+      post = Fabricate(:post, topic: topic, user: user)
+      active_feature = Fabricate(:yak_feature, feature_name: "Golden post")
+      permanent_feature =
+        Fabricate(:yak_feature, feature_name: "Yak title", category: "user")
+      expired_feature = Fabricate(:yak_feature, feature_name: "Old boost")
+      active_transaction =
+        Fabricate(
+          :yak_transaction,
+          user: user,
+          yak_wallet: wallet,
+          metadata: {
+            quantity: 3,
+          },
+        )
+
+      active_use =
+        Fabricate(
+          :yak_feature_use,
+          user: user,
+          yak_feature: active_feature,
+          yak_transaction: active_transaction,
+          related_post: post,
+          related_topic: topic,
+          expires_at: 3.days.from_now,
+        )
+      permanent_use =
+        Fabricate(
+          :yak_feature_use,
+          user: user,
+          yak_feature: permanent_feature,
+          yak_transaction:
+            Fabricate(:yak_transaction, user: user, yak_wallet: wallet),
+          expires_at: nil,
+        )
+      Fabricate(
+        :yak_feature_use,
+        user: user,
+        yak_feature: expired_feature,
+        yak_transaction: Fabricate(:yak_transaction, user: user, yak_wallet: wallet),
+        expires_at: 1.minute.ago,
+      )
+
+      get "/yaks.json"
+
+      expect(response.status).to eq(200)
+      expect(response.parsed_body["active_perks"]).to contain_exactly(
+        include(
+          "id" => active_use.id,
+          "name" => "Golden post",
+          "quantity" => 3,
+          "expires_at" => be_present,
+          "target" => include(
+            "type" => "post",
+            "title" => topic.title,
+            "post_number" => post.post_number,
+            "url" => post.relative_url,
+          ),
+        ),
+        include(
+          "id" => permanent_use.id,
+          "name" => "Yak title",
+          "quantity" => 1,
+          "expires_at" => nil,
+          "target" => include(
+            "type" => "profile",
+            "url" => user_path(user.username),
+          ),
+        ),
+      )
+    end
+
     it "requires authentication" do
       get "/yaks.json"
 

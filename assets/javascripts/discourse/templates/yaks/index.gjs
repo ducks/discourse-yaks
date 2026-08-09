@@ -10,6 +10,22 @@ import CustomTitleModal from "../../components/modal/custom-title";
 export default class YaksWallet extends Component {
   @service modal;
 
+  get formattedActivePerks() {
+    return (this.args.model.active_perks || []).map((perk) => ({
+      ...perk,
+      appliedDate: new Date(perk.applied_at).toLocaleDateString(),
+      expiresDate: perk.expires_at
+        ? new Date(perk.expires_at).toLocaleDateString()
+        : null,
+      remaining: this.remainingDuration(perk.expires_at),
+      targetLabel: this.targetLabel(perk.target),
+    }));
+  }
+
+  get hasActivePerks() {
+    return this.formattedActivePerks.length > 0;
+  }
+
   get formattedTransactions() {
     return (this.args.model.transactions || []).map((tx) => {
       const date = new Date(tx.created_at);
@@ -21,6 +37,52 @@ export default class YaksWallet extends Component {
         displayAmount: Math.abs(tx.amount),
       };
     });
+  }
+
+  remainingDuration(expiresAt) {
+    if (!expiresAt) {
+      return i18n("yaks.wallet.active_perks.permanent");
+    }
+
+    const remainingMinutes = Math.max(
+      1,
+      Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 60_000)
+    );
+
+    if (remainingMinutes >= 1_440) {
+      return i18n("yaks.wallet.active_perks.days_remaining", {
+        count: Math.ceil(remainingMinutes / 1_440),
+      });
+    }
+
+    if (remainingMinutes >= 60) {
+      return i18n("yaks.wallet.active_perks.hours_remaining", {
+        count: Math.ceil(remainingMinutes / 60),
+      });
+    }
+
+    return i18n("yaks.wallet.active_perks.minutes_remaining", {
+      count: remainingMinutes,
+    });
+  }
+
+  targetLabel(target) {
+    if (target.type === "post" && target.title) {
+      return i18n("yaks.wallet.active_perks.post_target", {
+        title: target.title,
+        post_number: target.post_number,
+      });
+    }
+
+    if (target.type === "topic" && target.title) {
+      return target.title;
+    }
+
+    if (target.type === "profile") {
+      return i18n("yaks.wallet.active_perks.profile_target");
+    }
+
+    return i18n("yaks.wallet.active_perks.unavailable_target");
   }
 
   @action
@@ -65,6 +127,57 @@ export default class YaksWallet extends Component {
           <div class="value">{{@model.balance}}</div>
         </div>
       </div>
+
+      {{#if this.hasActivePerks}}
+        <section class="active-perks">
+          <h2>{{i18n "yaks.wallet.active_perks.title"}}</h2>
+          <p class="active-perks__description">
+            {{i18n "yaks.wallet.active_perks.description"}}
+          </p>
+          <div class="active-perks__grid">
+            {{#each this.formattedActivePerks as |perk|}}
+              <article class="active-perk">
+                <div class="active-perk__header">
+                  <strong>{{perk.name}}</strong>
+                  <span class="active-perk__quantity">
+                    {{i18n
+                      "yaks.wallet.active_perks.quantity"
+                      count=perk.quantity
+                    }}
+                  </span>
+                </div>
+
+                <div class="active-perk__target">
+                  {{#if perk.target.url}}
+                    <a href={{perk.target.url}}>{{perk.targetLabel}}</a>
+                  {{else}}
+                    {{perk.targetLabel}}
+                  {{/if}}
+                </div>
+
+                <div class="active-perk__timing">
+                  <span>
+                    {{i18n
+                      "yaks.wallet.active_perks.applied"
+                      date=perk.appliedDate
+                    }}
+                  </span>
+                  {{#if perk.expiresDate}}
+                    <span>
+                      {{i18n
+                        "yaks.wallet.active_perks.expires"
+                        date=perk.expiresDate
+                      }}
+                    </span>
+                  {{/if}}
+                </div>
+
+                <div class="active-perk__remaining">{{perk.remaining}}</div>
+              </article>
+            {{/each}}
+          </div>
+        </section>
+      {{/if}}
 
       {{#if @model.features}}
         <section class="available-features">

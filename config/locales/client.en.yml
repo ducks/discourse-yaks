@@ -25,6 +25,25 @@ en:
         lifetime_earned: "Lifetime Earned"
         lifetime_spent: "Lifetime Spent"
         transaction_history: "Transaction History"
+        active_perks:
+          title: "Yak-tive perks"
+          description: "Perks currently working for you and where they apply."
+          quantity: "×%{count}"
+          profile_target: "Your profile"
+          unavailable_target: "Unavailable content"
+          post_target: "%{title}, post #%{post_number}"
+          applied: "Applied %{date}"
+          expires: "Expires %{date}"
+          permanent: "Permanent"
+          days_remaining:
+            one: "%{count} day remaining"
+            other: "%{count} days remaining"
+          hours_remaining:
+            one: "%{count} hour remaining"
+            other: "%{count} hours remaining"
+          minutes_remaining:
+            one: "%{count} minute remaining"
+            other: "%{count} minutes remaining"
 
       features:
         title: "Available Features"

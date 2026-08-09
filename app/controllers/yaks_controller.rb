@@ -87,11 +87,18 @@ class YaksController < ApplicationController
     wallet = YakWallet.for_user(current_user)
     transactions = wallet.yak_transactions.recent.limit(50)
     features = YakFeature.available.order(:cost)
+    active_perks =
+      YakFeatureUse
+        .active
+        .for_user(current_user.id)
+        .includes(:yak_feature, :yak_transaction, :related_topic, related_post: :topic)
+        .order(created_at: :desc)
 
     {
       balance: wallet.balance,
       lifetime_earned: wallet.lifetime_earned,
       lifetime_spent: wallet.lifetime_spent,
+      active_perks: active_perks.map { |feature_use| active_perk_payload(feature_use) },
       transactions:
         transactions.map do |tx|
           {
@@ -116,5 +123,40 @@ class YaksController < ApplicationController
           }
         end,
     }
+  end
+
+  def active_perk_payload(feature_use)
+    transaction_metadata = feature_use.yak_transaction.metadata || {}
+
+    {
+      id: feature_use.id,
+      key: feature_use.yak_feature.feature_key,
+      name: feature_use.yak_feature.feature_name,
+      category: feature_use.yak_feature.category,
+      quantity: transaction_metadata["quantity"] || 1,
+      applied_at: feature_use.created_at,
+      expires_at: feature_use.expires_at,
+      target: active_perk_target(feature_use),
+    }
+  end
+
+  def active_perk_target(feature_use)
+    if feature_use.related_post
+      post = feature_use.related_post
+
+      {
+        type: "post",
+        title: post.topic&.title,
+        post_number: post.post_number,
+        url: post.topic ? post.relative_url : nil,
+      }
+    elsif feature_use.related_topic
+      topic = feature_use.related_topic
+      { type: "topic", title: topic.title, url: topic.relative_url }
+    elsif feature_use.related_post_id || feature_use.related_topic_id
+      { type: "unavailable" }
+    else
+      { type: "profile", url: user_path(current_user.username) }
+    end
   end
 end
