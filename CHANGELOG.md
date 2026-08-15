@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Member wallets now show their Yak-tive perks, where each perk applies, its
+  purchased quantity, and its remaining duration.
+
 ## 20260808 — Alpha
 
 This is the first release intended for testing outside the original development environment.

@@ -9,7 +9,7 @@ Discourse Yaks is an experimental, non-monetary community currency plugin. Membe
 Members can:
 
 - earn Yaks by creating posts and topics, receiving likes, and having solutions accepted when discourse-solved is installed;
-- view their balance, lifetime totals, and recent transactions at `/yaks`;
+- view their balance, lifetime totals, recent transactions, and active perks at `/yaks`;
 - highlight one of their posts;
 - temporarily pin or globally boost one of their topics;
 - apply a temporary custom title or avatar flair.
