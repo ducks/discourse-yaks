@@ -25,7 +25,9 @@ For a manual smoke test:
 4. Grant enough Yaks from the admin interface to exercise each enabled perk.
 5. Apply perks only to content owned by the test member.
 6. Verify another member cannot apply a perk to that content.
-7. Shorten a perk duration in development and confirm its effect expires cleanly.
+7. Return to `/yaks` and confirm the Yak-tive perk shows its target, quantity,
+   and remaining duration.
+8. Shorten a perk duration in development and confirm its effect expires cleanly.
 
 ## Ledger reconciliation
 

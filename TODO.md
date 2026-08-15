@@ -12,7 +12,6 @@
 
 - Implement the currently disabled post pin and post boost records, or remove them permanently.
 - Add admin transaction browsing and filtering to the UI; the read endpoint already exists.
-- Add member-facing active-perk status and remaining duration.
 - Improve live balance and perk updates without full-page reloads.
 - Consider additional earning events only after abuse and idempotency rules are defined.
 
